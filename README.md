@@ -32,10 +32,4 @@ Zarządzanie wydarzeniami i wpisami.
 
 Usuwanie lub edycja niewłaściwych treści (wpisy...)
 
-Git Workflow Manual (for 3-Person Team)
 
-main      ← final, stable version
-└── develop      ← shared integration branch
-    ├── branch/personA    ← Person A
-    ├── branch/personB  ← Person B
-    └── branch/personC   ← Person C
