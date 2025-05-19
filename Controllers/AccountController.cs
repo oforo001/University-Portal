@@ -30,12 +30,23 @@ namespace University_Portal.Controllers
                     .PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
                 if (loginedUser.Succeeded)
                 {
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Email or password is incorrect");
-                    return View(model);
+                    // Find the logged-in user by email
+                    var user = await userManager.FindByEmailAsync(model.Email);
+
+                    // Check roles and redirect accordingly
+                    if (await userManager.IsInRoleAsync(user, "Admin"))
+                    {
+                        return RedirectToAction("Index", "Admin"); // Redirect to admin's index view
+                    }
+                    else if (await userManager.IsInRoleAsync(user, "User"))
+                    {
+                        return RedirectToAction("Index", "User"); // Redirect to user's' index view
+                    }
+                    else
+                    {
+                        // Fallback, just in case (no role assigned)
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
             }
             return View(model);
@@ -58,6 +69,7 @@ namespace University_Portal.Controllers
                 var createdUser = await userManager.CreateAsync(user, model.Password);
                 if (createdUser.Succeeded)
                 {
+                    await userManager.AddToRoleAsync(user, "User"); // if registration was successfull assign the registered entity 'user' role
                     return RedirectToAction("Login", "Account");
                 }
                 else
