@@ -16,6 +16,7 @@ namespace University_Portal.Models
         [Required]
         [StringLength(5000, MinimumLength = 2, ErrorMessage = "Provide Description with min. 2 and max. 5000 characters")]
         public string Description { get; set; } // DB column
+        public string? ImagePath { get; set; }
         [Required]
         public DateTime Date { get; set; } // DB column
         [Required]

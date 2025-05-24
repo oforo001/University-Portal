@@ -1,1 +1,69 @@
-﻿<h2>Hello From CreateEvent</h2>
+﻿@model University_Portal.ViewModels.AdminViewModels.EventCreateViewModel
+
+
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Create Event</h2>
+        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Events</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="CreateEvent" method="post" enctype="multipart/form-data" class="needs-validation mt-3" novalidate>
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" placeholder="Event Title" required />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the event" required></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Date" class="form-label"></label>
+                <input asp-for="Date" type="datetime-local" class="form-control" required />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Location" class="form-label"></label>
+                <input asp-for="Location" class="form-control" placeholder="Building, room, or online link" required />
+                <span asp-validation-for="Location" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="MaxParticipants" class="form-label"></label>
+                <input asp-for="MaxParticipants" class="form-control" type="number" min="1" required />
+                <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Image" class="form-label"></label>
+                <input asp-for="Image" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+                <div class="form-text">Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB.</div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-info text-white px-4">Create Event</button>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
