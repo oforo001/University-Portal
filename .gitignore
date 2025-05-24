@@ -1,5 +1,13 @@
+# User/IDE files
 .vs/
-bin/
-obj/
 *.user
 *.suo
+
+# Build output
+bin/
+obj/
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
