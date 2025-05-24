@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using University_Portal.Models;
 
-namespace University_Portal.Controllers
+namespace University_Portal.Controllers.User
 {
     public class HomeController : Controller
     {
