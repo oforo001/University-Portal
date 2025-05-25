@@ -14,7 +14,7 @@ namespace University_Portal.Data
         //3. Dodaje domyślne role: Admin i User przy pierwszym uruchomieniu migracji.
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
         {
-            //test
+            
         }
         public DbSet<Event> Events { get; set; }
         public DbSet<EventRegistration> EventRegistrations { get; set; }
