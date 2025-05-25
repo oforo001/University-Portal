@@ -22,11 +22,15 @@
                 <div class="card h-100 shadow-sm" style="min-height: 600px; font-size: 1.15em;">
                     @if (!string.IsNullOrEmpty(ev.ImagePath))
                     {
-                        <img src="~/@ev.ImagePath" alt="Event Image" class="card-img-top"
-                             style="height: 350px; object-fit: cover; border-radius: 0.6rem 0.6rem 0 0;">
+                        // Fallback onerror - shows /images/no-image.png if file is missing
+                        <img src="~/@ev.ImagePath" alt="Event Image"
+                             class="card-img-top"
+                             style="height: 350px; object-fit: cover; border-radius: 0.6rem 0.6rem 0 0;"
+                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
                     }
                     else
                     {
+                        // Placeholder if ImagePath is empty/null
                         <div class="bg-light d-flex align-items-center justify-content-center"
                              style="height: 350px; border-radius: 0.6rem 0.6rem 0 0;">
                             <span class="text-muted" style="font-size:1.3em;">No Image</span>
@@ -56,3 +60,5 @@ else
 {
     <div class="alert alert-info">No events created yet.</div>
 }
+
+
