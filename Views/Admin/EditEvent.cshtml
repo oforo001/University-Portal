@@ -1,0 +1,93 @@
+﻿@model University_Portal.ViewModels.AdminViewModels.EventCreateViewModel
+
+@{
+    ViewData["Title"] = "Edit Event";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Edit Event</h2>
+        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Events</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="EditEvent" method="post" enctype="multipart/form-data" class="needs-validation mt-3" novalidate>
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" placeholder="Event Title" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the event"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Date" class="form-label"></label>
+                <input asp-for="Date" type="datetime-local" class="form-control"
+                       value="@Model.Date.ToString("yyyy-MM-ddTHH:mm")" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Location" class="form-label"></label>
+                <input asp-for="Location" class="form-control" placeholder="Building, room, or online link" />
+                <span asp-validation-for="Location" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="MaxParticipants" class="form-label"></label>
+                <input asp-for="MaxParticipants" class="form-control" type="number" min="1" />
+                <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <label class="form-label">Current Image:</label>
+                    <div>
+                        <img src="~/@Model.ImagePath" alt="Current Event Image"
+                             style="max-width:250px;max-height:160px; border-radius:8px;" />
+                    </div>
+                }
+                <label asp-for="Image" class="form-label mt-2">Upload New Image (optional)</label>
+                <input asp-for="Image" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif" required="false" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+                <div class="form-text">Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB. Leave empty to keep the current image.</div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-info text-white px-4">Update Event</button>
+    </form>
+</div>
+
+<!--reson why I add this block is to ensure there is no nessesery client side validation for image-->
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var input = document.querySelector('input[name="Image"]');
+            if (input) {
+                input.removeAttribute('required');
+                input.removeAttribute('data-val-required');
+            }
+            var errorSpan = document.getElementById('Image-error');
+            if (errorSpan && errorSpan.innerText === "The Image field is required.") {
+                errorSpan.innerText = "";
+            }
+        });
+    </script>
+}
+
