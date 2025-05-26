@@ -20,9 +20,9 @@ namespace University_Portal.Controllers.Admin
 
         public AdminController(ApplicationContext context, IWebHostEnvironment env, UserManager<AppUser> userManager)
         {
-               _context = context;
-               _env = env;
-               _userManager = userManager;
+            _context = context;
+            _env = env;
+            _userManager = userManager;
         }
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -40,6 +40,9 @@ namespace University_Portal.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent(EventCreateViewModel model)
         {
+            ModelState.Remove("ImagePath");
+            ModelState.Remove("Image");
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -113,7 +116,7 @@ namespace University_Portal.Controllers.Admin
                 Date = ev.Date,
                 Location = ev.Location,
                 MaxParticipants = ev.MaxParticipants,
-                ImagePath = ev.ImagePath 
+                ImagePath = ev.ImagePath
             };
 
             return View(model);
@@ -180,6 +183,30 @@ namespace University_Portal.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost, ActionName("DeleteEvent")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>DeleteEvent(int id)
+        {
+            var ev = await _context.Events.FindAsync(id);
+            if (ev == null)
+                return NotFound();
+
+            // Delete the image file if it exists
+            if (!string.IsNullOrEmpty(ev.ImagePath))
+            {
+                var filePath = Path.Combine(_env.WebRootPath, ev.ImagePath.Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+
+            _context.Events.Remove(ev);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Event deleted successfully!";
+            return RedirectToAction(nameof(Index));
+        }
 
 
 
