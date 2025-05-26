@@ -40,7 +40,7 @@ namespace University_Portal.Controllers
                     }
                     else if (await userManager.IsInRoleAsync(user, "User"))
                     {
-                        return RedirectToAction("Index", "User"); // Redirect to user's' index view
+                        return RedirectToAction("Index", "Home"); // Redirect to home index view
                     }
                     else
                     {
