@@ -31,7 +31,7 @@ namespace University_Portal.Controllers.Admin
             return View(showEvents);
         }
         [HttpGet]
-        public IActionResult CreateEvent()
+        public IActionResult CreateEvent() // Views/Admin/CreateEvent.cshtml
         {
             return View();
         }
@@ -40,8 +40,8 @@ namespace University_Portal.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent(EventCreateViewModel model)
         {
-            ModelState.Remove("ImagePath");
-            ModelState.Remove("Image");
+            ModelState.Remove("ImagePath"); // this is the 'workarount' step to prevent 'Image is requered' errormessage
+            ModelState.Remove("Image"); // same here
 
             if (!ModelState.IsValid)
             {
@@ -51,7 +51,6 @@ namespace University_Portal.Controllers.Admin
             string imagePath = null;
             if (model.Image != null && model.Image.Length > 0)
             {
-
                 if (model.Image.Length > 4 * 1024 * 1024)
                 {
                     ModelState.AddModelError("Image", "File size must be less than 4MB.");
@@ -64,7 +63,6 @@ namespace University_Portal.Controllers.Admin
                     ModelState.AddModelError("Image", "Only .jpg, .jpeg, .png, .gif files are allowed.");
                     return View(model);
                 }
-
                 var fileName = $"{Guid.NewGuid()}{ext}";
                 var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "events");
                 if (!Directory.Exists(uploadPath))
@@ -78,7 +76,6 @@ namespace University_Portal.Controllers.Admin
                 // Save relative path for DB
                 imagePath = Path.Combine("uploads", "events", fileName).Replace("\\", "/");
             }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -94,8 +91,7 @@ namespace University_Portal.Controllers.Admin
                 MaxParticipants = model.MaxParticipants,
                 OrganizerId = user.Id
             };
-
-            _context.Events.Add(newEvent); // Save to DB
+            _context.Events.Add(newEvent); // Save Event to DB
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Event created successfully!";
@@ -182,7 +178,6 @@ namespace University_Portal.Controllers.Admin
             TempData["Success"] = "Event updated successfully!";
             return RedirectToAction(nameof(Index));
         }
-
         [HttpPost, ActionName("DeleteEvent")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult>DeleteEvent(int id)
@@ -190,7 +185,6 @@ namespace University_Portal.Controllers.Admin
             var ev = await _context.Events.FindAsync(id);
             if (ev == null)
                 return NotFound();
-
             // Delete the image file if it exists
             if (!string.IsNullOrEmpty(ev.ImagePath))
             {
@@ -200,15 +194,11 @@ namespace University_Portal.Controllers.Admin
                     System.IO.File.Delete(filePath);
                 }
             }
-
             _context.Events.Remove(ev);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Event deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
-
-
-
     }
 }

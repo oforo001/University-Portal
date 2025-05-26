@@ -10,19 +10,17 @@ namespace University_Portal.Controllers
     {
         private readonly SignInManager<AppUser> signInManager;
         private readonly UserManager<AppUser> userManager;
-
         public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager)
         {
             this.signInManager=signInManager;
             this.userManager=userManager;
         }
-
         public IActionResult Login()
         {
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model) // this IActionResult checks the roles and if User -> Views/Home/Index.cshtml IF Admin -> Views/Admin/Index.cshtml
         {
             if (ModelState.IsValid)
             {
@@ -56,7 +54,7 @@ namespace University_Portal.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)  // this IActionResult assums there is only one Admin created by first Data seeding -> all new registration Role=User
         {
             if (ModelState.IsValid)
             {
