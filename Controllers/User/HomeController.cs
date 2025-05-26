@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using University_Portal.Data;
 using University_Portal.Models;
+using System.Security.Claims;
 
 namespace University_Portal.Controllers.User
 {
@@ -18,19 +19,30 @@ namespace University_Portal.Controllers.User
             _logger = logger;
             _context = context;
         }
-
-        // Show all events for everyone
+        // This returns all Events after user launch the Index Page
         public async Task<IActionResult> Index()
         {
             var events = await _context.Events
                 .OrderByDescending(e => e.Date)
                 .ToListAsync();
+
+            // If there are any registered Events for auth. User -> it will be shown in View/Home.Index.cshtml -> if not - skip
+            List<int> registeredEventIds = new List<int>();
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                registeredEventIds = await _context.EventRegistrations
+                    .Where(r => r.UserId == userId)
+                    .Select(r => r.EventId)
+                    .ToListAsync();
+            }
+            // passing list with registered Events to the Index.cshtml
+            ViewBag.RegisteredEventIds = registeredEventIds;
             return View(events);
         }
         [Authorize]
         public async Task<IActionResult> Register(int id)
         {
-            // You may want to check for null id, but skip for brevity
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // This is the Identity UserId
 
             // Prevent duplicate registrations
