@@ -15,6 +15,7 @@ namespace University_Portal.ViewModels.AdminViewModels
 
         // This property is for handling file uploads from the form
         public IFormFile Image { get; set; } 
+        public string ImagePath { get; set; }
 
         [Required]
         public DateTime Date { get; set; }
