@@ -32,10 +32,6 @@ public static class DbInitializer
                 // Adds the user to the “Admin” role
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
-            else
-            {
-                // Handle creation errors (log, throw, etc.)
-            }
         }
         else
         {

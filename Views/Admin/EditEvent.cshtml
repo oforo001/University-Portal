@@ -68,14 +68,47 @@
 
         <button type="submit" class="btn btn-info text-white px-4">Update Event</button>
     </form>
-</div>
 
-<!--reson why I add this block is to ensure there is no nessesery client side validation for image-->
+    @* 🟦 Registered Users Table *@
+    @if (Model.RegisteredUsers != null && Model.RegisteredUsers.Any())
+    {
+        <div class="mt-5">
+            <h4>Registered Users</h4>
+            <table class="table table-bordered table-hover mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>User Name</th>
+                        <th>Email</th>
+                        <th>Registered At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
+                    {
+                        var user = Model.RegisteredUsers[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td>@user.UserName</td>
+                            <td>@user.Email</td>
+                            <td>@user.RegisteredAt.ToString("dd-MM-yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-5">No users have registered for this event yet.</div>
+    }
+</div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var input = document.querySelector('input[name="Image"]');
@@ -90,4 +123,3 @@
         });
     </script>
 }
-
