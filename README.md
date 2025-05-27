@@ -1,33 +1,45 @@
-# University-Portal
+🎓 University-Portal
+Uniwersytecki Portal Społecznościowy z Systemem Wydarzeń
 
-Uniwersytecki Portal Społecznościowy z Systemem Wydarzeń 
+ Opis projektu
+Projekt zakłada stworzenie internetowego portalu społecznościowego dla studentów i pracowników uczelni, który umożliwia organizację wydarzeń oraz udział w nich. Aplikacja została zbudowana w technologii ASP.NET MVC z wykorzystaniem Entity Framework i bazy danych SQLite.
 
-Opis funkcjonalności do implementacji:
-Projekt zakłada stworzenie internetowego portalu społecznościowego dla studentów i pracowników uczelni, który umożliwia organizację wydarzeń, udział w nich  Aplikacja będzie stworzona w technologii ASP.NET MVC z użyciem bazy danych SQLite
-
- 1. Rejestracja i logowanie użytkowników
-Rejestracja nowych użytkowników z podziałem na role: Student, ,Pracownik(Administrator)
+✅ Funkcjonalności
+1. Rejestracja i logowanie
+Rejestracja nowych użytkowników z podziałem na role: Student, Pracownik (Administrator).
 
 Logowanie i wylogowanie z konta.
 
-Reset hasła i zmiana danych konta.
+Resetowanie hasła i edycja danych konta.
 
-Zarządzanie tożsamością z wykorzystaniem ASP.NET Identity.
+Zarządzanie kontami użytkowników za pomocą ASP.NET Identity.
 
 2. System wydarzeń uczelnianych
-Przeglądanie nadchodzących wydarzeń.
+Przeglądanie listy nadchodzących wydarzeń.
 
-Szczegóły wydarzenia: tytuł, opis, data, miejsce, maksymalna liczba uczestników.
+Szczegóły wydarzenia: tytuł, opis, data, miejsce, limit uczestników.
 
-Rejestracja na wydarzenie z limitem miejsc.
+Rejestracja na wydarzenia (z uwzględnieniem limitów).
 
-Panel administratora: dodawanie, edycja i usuwanie wydarzeń.
+Panel administratora do tworzenia, edycji i usuwania wydarzeń.
 
-Lista uczestników dostępna dla organizatora.
+Lista zarejestrowanych uczestników dostępna dla organizatora.
 
- 3. Panel administratora
-Zarządzanie użytkownikami:  blokowanie kont.
+🛠3. Panel administratora
+Zarządzanie użytkownikami (np. blokowanie kont).
 
-Zarządzanie wydarzeniami i wpisami.
+Zarządzanie wydarzeniami i zgłoszonymi wpisami.
 
-Usuwanie lub edycja niewłaściwych treści (wpisy...)
+Usuwanie lub edycja nieodpowiednich treści.
+
+🚀 Uruchomienie aplikacji lokalnie
+Aby uruchomić projekt lokalnie:
+
+Przełącz się na branch main:
+git checkout main
+
+Otwórz Package Manager Console w Visual Studio.
+
+Uruchom polecenie:
+
+Update-Database

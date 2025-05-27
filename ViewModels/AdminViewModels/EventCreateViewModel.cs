@@ -27,5 +27,6 @@ namespace University_Portal.ViewModels.AdminViewModels
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Max participants must be greater than 0")]
         public int MaxParticipants { get; set; }
+        public List<RegisteredUser> RegisteredUsers { get; set; } = new();
     }
 }

@@ -101,9 +101,20 @@ namespace University_Portal.Controllers.Admin
         public async Task<IActionResult> EditEvent(int id)
         {
             var ev = await _context.Events.FindAsync(id);
-
             if (ev == null)
                 return NotFound();
+
+            var registeredUsers = await _context.EventRegistrations
+                .Where(r => r.EventId == id && !r.IsCancelled)
+                .Include(r => r.User)
+                .Select(r => new RegisteredUser
+                {
+                    UserId = r.User.Id,
+                    UserName = r.User.UserName,
+                    Email = r.User.Email,
+                    RegisteredAt = r.RegisteredAt
+                })
+                .ToListAsync();
 
             var model = new EventCreateViewModel
             {
@@ -112,11 +123,13 @@ namespace University_Portal.Controllers.Admin
                 Date = ev.Date,
                 Location = ev.Location,
                 MaxParticipants = ev.MaxParticipants,
-                ImagePath = ev.ImagePath
+                ImagePath = ev.ImagePath,
+                RegisteredUsers = registeredUsers
             };
 
             return View(model);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditEvent(int id, EventCreateViewModel model)
