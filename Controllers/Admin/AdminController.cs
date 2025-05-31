@@ -40,7 +40,7 @@ namespace University_Portal.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent(EventCreateViewModel model)
         {
-            ModelState.Remove("ImagePath"); // this is the 'workarount' step to prevent 'Image is requered' errormessage
+            ModelState.Remove("ImagePath"); // this is the 'workaround' step to prevent 'Image is requered' errormessage
             ModelState.Remove("Image"); // same here
 
             if (!ModelState.IsValid)
