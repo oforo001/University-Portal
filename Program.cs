@@ -2,6 +2,7 @@ using University_Portal.Data;
 using University_Portal.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using University_Portal.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -52,7 +54,20 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    DbInitializer.SeedDefaultAdminAsync(userManager, roleManager).GetAwaiter().GetResult();
+    DBUserRolesInit.SeedDefaultAdminAsync(userManager, roleManager).GetAwaiter().GetResult();
 }
+
+app.Use(async (context, next) =>
+{
+    if (AdminSetupState.IsInitialSetUpRequered && !context.Request.Path.StartsWithSegments("/Account/AccountSetup"))
+    {
+        context.Response.Redirect("/Account/AccountSetup");
+        return;
+    }
+    await next();
+});
+    
+
+    
 
 app.Run();
