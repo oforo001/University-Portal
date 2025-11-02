@@ -1,0 +1,61 @@
+﻿@using University_Portal.ViewModels
+@model RegisterViewModel
+
+@{
+    ViewData["Title"] = "Admin Setup";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box">
+        <h2 class="text-center mb-3 text-primary">Initial Administrator Setup</h2>
+
+        <div class="alert alert-info mb-4" role="alert">
+            <strong>Welcome!</strong> It looks like this is the first time the system is being used.<br />
+            No administrator account has been found yet. <br />
+            Please create the initial <strong>Admin</strong> account below - this user will have full access to system configuration and user management.
+        </div>
+
+        <form asp-controller="Account" asp-action="AccountSetup" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label">Full Name</label>
+                <input asp-for="Name" class="form-control" placeholder="Enter your full name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Administrator Email</label>
+                <input asp-for="Email" class="form-control" placeholder="admin@example.com" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">Password</label>
+                <input asp-for="Password" class="form-control" placeholder="Enter a secure password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter your password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <input type="submit" value="Create Admin Account" class="btn btn-primary w-100" />
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Once this account is created, the setup page will be disabled and you will be redirected to the login page.
+                </small>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
+    }
+}
