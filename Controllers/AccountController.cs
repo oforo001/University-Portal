@@ -2,7 +2,7 @@
 using University_Portal.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using University_Portal.Helpers;
 
 namespace University_Portal.Controllers
 {
@@ -19,30 +19,73 @@ namespace University_Portal.Controllers
         {
             return View();
         }
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model) // this IActionResult checks the roles and if User -> Views/Home/Index.cshtml IF Admin -> Views/Admin/Index.cshtml
+        [HttpGet]
+        public async Task<IActionResult> AccountSetup() 
         {
+            // Provent re-entry into URL if Admin Role already fount
+            var isAdminFound = await userManager.GetUsersInRoleAsync("Admin");
+
+            if (isAdminFound.Any())
+            {
+                return RedirectToAction("Login","Account");
+            }
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> AccountSetup(RegisterViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var admins = await userManager.GetUsersInRoleAsync("Admin");
+                if (admins.Any())
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var adminUser = new AppUser
+                {
+                    UserName = viewModel.Email,
+                    Email = viewModel.Email,
+                    FullName = viewModel.Name
+                };
+
+                var result = await userManager.CreateAsync(adminUser, viewModel.Password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                    AdminSetupState.IsInitialSetUpRequered = false;
+                    return RedirectToAction("Login", "Account");
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            return View(viewModel);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginViewModel model) 
+        {
+            // this IActionResult checks the roles and if User -> Views/Home/Index.cshtml IF Admin -> Views/Admin/Index.cshtml
             if (ModelState.IsValid)
             {
                 var loginedUser = await signInManager
                     .PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
                 if (loginedUser.Succeeded)
                 {
-                    // Find the logged-in user by email
                     var user = await userManager.FindByEmailAsync(model.Email);
 
-                    // Check roles and redirect accordingly
                     if (await userManager.IsInRoleAsync(user, "Admin"))
                     {
-                        return RedirectToAction("Index", "Admin"); // Redirect to admin's index view
+                        return RedirectToAction("Index", "Admin");
                     }
                     else if (await userManager.IsInRoleAsync(user, "User"))
                     {
-                        return RedirectToAction("Index", "Home"); // Redirect to home index view
+                        return RedirectToAction("Index", "Home"); 
                     }
                     else
                     {
-                        // Fallback, just in case (no role assigned)
                         return RedirectToAction("Index", "Home");
                     }
                 }
@@ -54,8 +97,9 @@ namespace University_Portal.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)  // this IActionResult assums there is only one Admin created by first Data seeding -> all new registration Role=User
+        public async Task<IActionResult> Register(RegisterViewModel model)  
         {
+            // this IActionResult assums there is only one Admin created by first Data seeding -> all new registration Role=User
             if (ModelState.IsValid)
             {
                 AppUser user = new AppUser()
@@ -67,7 +111,8 @@ namespace University_Portal.Controllers
                 var createdUser = await userManager.CreateAsync(user, model.Password);
                 if (createdUser.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user, "User"); // if registration was successfull assign the registered entity 'user' role
+                    // if registration was successfull assign the registered entity 'user' role
+                    await userManager.AddToRoleAsync(user, "User"); 
                     return RedirectToAction("Login", "Account");
                 }
                 else
