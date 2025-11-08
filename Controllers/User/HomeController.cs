@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using System.Security.Claims;
 using University_Portal.Data;
 using University_Portal.Models;
 using University_Portal.ViewModels.Home;
-using System.Security.Claims;
+using University_Portal.AppServices.Event;
+using University_Portal.AppServices.Events;
 
 namespace University_Portal.Controllers.User
 {
@@ -55,40 +55,18 @@ namespace University_Portal.Controllers.User
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Register(int id)
+        public async Task<IActionResult> RegisterForEvent(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // getting user id
-
-
-            var registration = await _context.EventRegistrations
-                .FirstOrDefaultAsync(r => r.EventId == id && r.UserId == userId); // displays all events 
-
-            if (registration == null) // if user was not registered
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                _context.EventRegistrations.Add(new EventRegistration
-                {
-                    EventId = id,
-                    UserId = userId,
-                    RegisteredAt = DateTime.UtcNow,
-                    IsCancelled = false
-                });
-
-                TempData["Success"] = "You have registered for the event!";
-            }
-            else if (registration.IsCancelled) // in case user canceled the registration and wants to register one more time
-            {
-                registration.IsCancelled = false;
-                registration.RegisteredAt = DateTime.UtcNow;
-
-                TempData["Success"] = "You have re-registered for the event!";
-            }
-            else
-            {
-                TempData["Error"] = "You are already registered for this event.";
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = "Nie można zidentyfikować użytkownika.";
+                RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
+            var registerUserToEvent = await EventClient.RegisterAsync(_context, id, userId);
+
+            TempData[registerUserToEvent.Success ? "Success" : "Error"] = registerUserToEvent.Message;
             return RedirectToAction(nameof(Index));
         }
 
@@ -97,31 +75,21 @@ namespace University_Portal.Controllers.User
         public async Task<IActionResult> Cancel(int id) 
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var registration = await _context.EventRegistrations.FirstOrDefaultAsync(r => r.EventId == id && r.UserId == userId && r.IsCancelled == false);
-            if (registration != null) 
+            if (string.IsNullOrEmpty(userId))
             {
-                registration.IsCancelled = true;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "You have cancelled your registration.";
-            }
-            else
-            {
-                TempData["Error"] = "Registration not found or already cancelled.";
+                TempData["Error"] = "Nie można zidentyfikować użytkownika.";
+                RedirectToAction(nameof(Index));
             }
 
+            var userCancelFromEvent = await EventClient.CancelAsync(_context, id, userId);
+
+            TempData[userCancelFromEvent.Success ? "Success" : "Error"] = userCancelFromEvent.Message;
             return RedirectToAction(nameof(Index));
-
         }
 
         public IActionResult Privacy()
         {
             return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }

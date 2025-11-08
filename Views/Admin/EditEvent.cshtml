@@ -69,7 +69,6 @@
         <button type="submit" class="btn btn-info text-white px-4">Update Event</button>
     </form>
 
-    @* 🟦 Registered Users Table *@
     @if (Model.RegisteredUsers != null && Model.RegisteredUsers.Any())
     {
         <div class="mt-5">
@@ -97,10 +96,6 @@
                 </tbody>
             </table>
         </div>
-    }
-    else
-    {
-        <div class="alert alert-info mt-5">No users have registered for this event yet.</div>
     }
 </div>
 

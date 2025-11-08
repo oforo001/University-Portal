@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Linq;
+using University_Portal.AppServices.Events;
 using University_Portal.Data;
 using University_Portal.Models;
 using University_Portal.ViewModels.AdminViewModels;
@@ -47,54 +48,12 @@ namespace University_Portal.Controllers.Admin
             {
                 return View(model);
             }
-
-            string imagePath = null;
-            if (model.Image != null && model.Image.Length > 0)
-            {
-                if (model.Image.Length > 4 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("Image", "File size must be less than 4MB.");
-                    return View(model);
-                }
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                var ext = Path.GetExtension(model.Image.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(ext))
-                {
-                    ModelState.AddModelError("Image", "Only .jpg, .jpeg, .png, .gif files are allowed.");
-                    return View(model);
-                }
-                var fileName = $"{Guid.NewGuid()}{ext}";
-                var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "events");
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                var filePath = Path.Combine(uploadPath, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.Image.CopyToAsync(stream);
-                }
-                // Save relative path for DB
-                imagePath = Path.Combine("uploads", "events", fileName).Replace("\\", "/");
-            }
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
                 return Unauthorized();
-            }
-            var newEvent = new Event
-            {
-                Title = model.Title,
-                Description = model.Description,
-                ImagePath = imagePath,
-                Date = model.Date,
-                Location = model.Location,
-                MaxParticipants = model.MaxParticipants,
-                OrganizerId = user.Id
-            };
-            _context.Events.Add(newEvent); // Save Event to DB
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Event created successfully!";
+            var createEventResult = await EventClient.CreateEventAsync(_context, user.Id, model, _env);
+            TempData[createEventResult.Success ? "Success" : "Error"] = createEventResult.Message;
             return RedirectToAction(nameof(Index));
         }
         [HttpGet]
@@ -145,9 +104,25 @@ namespace University_Portal.Controllers.Admin
                 return View(model);
             }
 
-            var eventToUpdate = await _context.Events.FindAsync(id);
+            var eventToUpdate = await _context.Events
+            .Include(e => e.Registrations)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
             if (eventToUpdate == null)
                 return NotFound();
+
+            var currentParticipiantsCount = await _context.EventRegistrations
+                .CountAsync(r => r.EventId == id && !r.IsCancelled);
+
+            if (model.MaxParticipants < currentParticipiantsCount)
+            {
+                ModelState.AddModelError("MaxParticipants",
+                    $"Nie można ustawić maksymalnej liczby uczestników na '{model.MaxParticipants}', ponieważ " +
+                    $"'{currentParticipiantsCount}' uczestników jest już zapisanych na to wydarzenie.");
+
+                model.ImagePath = eventToUpdate.ImagePath; 
+                return View(model);
+            }
 
             eventToUpdate.Title = model.Title;
             eventToUpdate.Description = model.Description;
