@@ -46,9 +46,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-
-// section do define the Admin if not exist
-
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

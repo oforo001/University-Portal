@@ -81,7 +81,7 @@
                             }
                             else
                             {
-                                <form asp-controller="Home" asp-action="Register" asp-route-id="@ev.Id" method="post">
+                                <form asp-controller="Home" asp-action="RegisterForEvent" asp-route-id="@ev.Id" method="post">
                                     <button type="submit" class="btn btn-info text-white mt-3 w-100" @(ev.FreeSlots <= 0 ? "disabled" : "")>
                                         Register
                                     </button>
