@@ -41,8 +41,8 @@ namespace University_Portal.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent(EventCreateViewModel model)
         {
-            ModelState.Remove("ImagePath"); // this is the 'workaround' step to prevent 'Image is requered' errormessage
-            ModelState.Remove("Image"); // same here
+            ModelState.Remove("ImagePath"); 
+            ModelState.Remove("Image"); 
 
             if (!ModelState.IsValid)
             {
@@ -125,23 +125,13 @@ namespace University_Portal.Controllers.Admin
         [HttpPost, ActionName("DeleteEvent")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult>DeleteEvent(int id)
-        {
-            var ev = await _context.Events.FindAsync(id);
-            if (ev == null)
-                return NotFound();
-            // Delete the image file if it exists
-            if (!string.IsNullOrEmpty(ev.ImagePath))
-            {
-                var filePath = Path.Combine(_env.WebRootPath, ev.ImagePath.Replace('/', Path.DirectorySeparatorChar));
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
-            }
-            _context.Events.Remove(ev);
-            await _context.SaveChangesAsync();
+         {
+            var user = await _userManager.GetUserAsync(User) ?? throw new UnauthorizedAccessException();
+            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty;
 
-            TempData["Success"] = "Event deleted successfully!";
+            var deleteEventResult = await EventClient.DeleteEventAsync(_context, id, userRole, _env);
+
+            TempData[deleteEventResult.Success ? "Success" : "Error"] = deleteEventResult.Message;
             return RedirectToAction(nameof(Index));
         }
     }
