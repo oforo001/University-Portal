@@ -9,7 +9,7 @@ namespace University_Portal.AppServices.Event
         Task<(bool Success, string Message)> ExecuteAsync(
             ApplicationContext context,
             int? eventId,
-            string? userId,
+            string? userIdOrRole,
             EventCreateViewModel? model,
             IWebHostEnvironment? env);
     }

@@ -1,6 +1,8 @@
 ﻿using University_Portal.Data;
 using University_Portal.AppServices.Event;
 using University_Portal.ViewModels.AdminViewModels;
+using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace University_Portal.AppServices.Events
 {
@@ -42,6 +44,19 @@ namespace University_Portal.AppServices.Events
             var strategy = new CreateEventStrategy();
             return await ExecuteStrategyAsync(strategy, context, null, userId, model, env);
         }
+        public static async Task<(bool Success, string Message)> EditEventAsync(
+        ApplicationContext context,
+        int eventId,
+        string userRole,
+        EventCreateViewModel model,
+        IWebHostEnvironment env)
+        {
+            var strategy = new EditEventStrategy();
+            return await ExecuteStrategyAsync(strategy, context, eventId, userRole, model, env);
+        }
+
+
+
         private static async Task<(bool Success, string Message)> ExecuteStrategyAsync(
             IEventActionStrategy strategy,
             ApplicationContext context,
