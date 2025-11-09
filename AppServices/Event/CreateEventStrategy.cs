@@ -14,6 +14,7 @@ namespace University_Portal.AppServices.Event
             string userId,
             EventCreateViewModel? model = null,
             IWebHostEnvironment? env = null)
+
         {
             if (model == null)
                 return (false, "Brak danych wydarzenia.");

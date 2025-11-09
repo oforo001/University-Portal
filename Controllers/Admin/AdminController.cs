@@ -41,8 +41,8 @@ namespace University_Portal.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent(EventCreateViewModel model)
         {
-            ModelState.Remove("ImagePath"); // this is the 'workaround' step to prevent 'Image is requered' errormessage
-            ModelState.Remove("Image"); // same here
+            ModelState.Remove("ImagePath"); 
+            ModelState.Remove("Image"); 
 
             if (!ModelState.IsValid)
             {
@@ -98,94 +98,40 @@ namespace University_Portal.Controllers.Admin
 
             if (!ModelState.IsValid)
             {
+                model.ImagePath = (await _context.Events.FindAsync(id))?.ImagePath;
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User) ?? throw new UnauthorizedAccessException();
+            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty;
+
+            var editEventResult = await EventClient.EditEventAsync(_context, id, userRole, model, _env);
+
+            if (!editEventResult.Success)
+            {
+                ModelState.AddModelError(string.Empty, editEventResult.Message);
+
                 var ev = await _context.Events.FindAsync(id);
                 if (ev != null)
                     model.ImagePath = ev.ImagePath;
+
                 return View(model);
             }
 
-            var eventToUpdate = await _context.Events
-            .Include(e => e.Registrations)
-            .FirstOrDefaultAsync(e => e.Id == id);
-
-            if (eventToUpdate == null)
-                return NotFound();
-
-            var currentParticipiantsCount = await _context.EventRegistrations
-                .CountAsync(r => r.EventId == id && !r.IsCancelled);
-
-            if (model.MaxParticipants < currentParticipiantsCount)
-            {
-                ModelState.AddModelError("MaxParticipants",
-                    $"Nie można ustawić maksymalnej liczby uczestników na '{model.MaxParticipants}', ponieważ " +
-                    $"'{currentParticipiantsCount}' uczestników jest już zapisanych na to wydarzenie.");
-
-                model.ImagePath = eventToUpdate.ImagePath; 
-                return View(model);
-            }
-
-            eventToUpdate.Title = model.Title;
-            eventToUpdate.Description = model.Description;
-            eventToUpdate.Date = model.Date;
-            eventToUpdate.Location = model.Location;
-            eventToUpdate.MaxParticipants = model.MaxParticipants;
-
-            // Image update logic (only if new image provided)
-            if (model.Image != null && model.Image.Length > 0)
-            {
-                if (model.Image.Length > 4 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("Image", "File size must be less than 4MB.");
-                    model.ImagePath = eventToUpdate.ImagePath;
-                    return View(model);
-                }
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                var ext = Path.GetExtension(model.Image.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(ext))
-                {
-                    ModelState.AddModelError("Image", "Only .jpg, .jpeg, .png, .gif files are allowed.");
-                    model.ImagePath = eventToUpdate.ImagePath;
-                    return View(model);
-                }
-
-                var fileName = $"{Guid.NewGuid()}{ext}";
-                var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "events");
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                var filePath = Path.Combine(uploadPath, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.Image.CopyToAsync(stream);
-                }
-                eventToUpdate.ImagePath = Path.Combine("uploads", "events", fileName).Replace("\\", "/");
-            }
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Event updated successfully!";
+            TempData["Success"] = editEventResult.Message;
             return RedirectToAction(nameof(Index));
         }
+
         [HttpPost, ActionName("DeleteEvent")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult>DeleteEvent(int id)
-        {
-            var ev = await _context.Events.FindAsync(id);
-            if (ev == null)
-                return NotFound();
-            // Delete the image file if it exists
-            if (!string.IsNullOrEmpty(ev.ImagePath))
-            {
-                var filePath = Path.Combine(_env.WebRootPath, ev.ImagePath.Replace('/', Path.DirectorySeparatorChar));
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
-            }
-            _context.Events.Remove(ev);
-            await _context.SaveChangesAsync();
+         {
+            var user = await _userManager.GetUserAsync(User) ?? throw new UnauthorizedAccessException();
+            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty;
 
-            TempData["Success"] = "Event deleted successfully!";
+            var deleteEventResult = await EventClient.DeleteEventAsync(_context, id, userRole, _env);
+
+            TempData[deleteEventResult.Success ? "Success" : "Error"] = deleteEventResult.Message;
             return RedirectToAction(nameof(Index));
         }
     }
