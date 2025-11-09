@@ -54,7 +54,15 @@ namespace University_Portal.AppServices.Events
             var strategy = new EditEventStrategy();
             return await ExecuteStrategyAsync(strategy, context, eventId, userRole, model, env);
         }
-
+        public static async Task<(bool Success, string Message)> DeleteEventAsync(
+        ApplicationContext context,
+        int eventId,
+        string userRole,
+        IWebHostEnvironment env)
+        {
+            var strategy = new DeleteEventStrategy();
+            return await ExecuteStrategyAsync(strategy, context, eventId, userRole, null, env);
+        }
 
 
         private static async Task<(bool Success, string Message)> ExecuteStrategyAsync(
