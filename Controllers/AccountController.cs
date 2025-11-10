@@ -3,6 +3,7 @@ using University_Portal.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using University_Portal.Helpers;
+using University_Portal.AppServices.Account;
 
 namespace University_Portal.Controllers
 {
@@ -22,7 +23,6 @@ namespace University_Portal.Controllers
         [HttpGet]
         public async Task<IActionResult> AccountSetup() 
         {
-            // Provent re-entry into URL if Admin Role already fount
             var isAdminFound = await userManager.GetUsersInRoleAsync("Admin");
 
             if (isAdminFound.Any())
@@ -32,66 +32,43 @@ namespace University_Portal.Controllers
             return View();
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AccountSetup(RegisterViewModel viewModel)
         {
-            if (ModelState.IsValid)
-            {
-                var admins = await userManager.GetUsersInRoleAsync("Admin");
-                if (admins.Any())
-                {
-                    return RedirectToAction("Login", "Account");
-                }
+            if (!ModelState.IsValid)
+                return View(viewModel);
 
-                var adminUser = new AppUser
-                {
-                    UserName = viewModel.Email,
-                    Email = viewModel.Email,
-                    FullName = viewModel.Name
-                };
+            var (success, message) = await AccountClient.AccountSetupAsync(userManager, viewModel);
 
-                var result = await userManager.CreateAsync(adminUser, viewModel.Password);
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
-                    AdminSetupState.IsInitialSetUpRequered = false;
-                    return RedirectToAction("Login", "Account");
-                }
+            TempData[success ? "Success" : "Error"] = message;
 
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-            }
+            if (success)
+                return RedirectToAction("Login", "Account");
+
             return View(viewModel);
         }
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model) 
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel viewModel)
         {
-            // this IActionResult checks the roles and if User -> Views/Home/Index.cshtml IF Admin -> Views/Admin/Index.cshtml
-            if (ModelState.IsValid)
-            {
-                var loginedUser = await signInManager
-                    .PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
-                if (loginedUser.Succeeded)
-                {
-                    var user = await userManager.FindByEmailAsync(model.Email);
+            if (!ModelState.IsValid)
+                return View(viewModel);
 
-                    if (await userManager.IsInRoleAsync(user, "Admin"))
-                    {
-                        return RedirectToAction("Index", "Admin");
-                    }
-                    else if (await userManager.IsInRoleAsync(user, "User"))
-                    {
-                        return RedirectToAction("Index", "Home"); 
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                }
+            var (success, message) = await AccountClient.LoginAsync(signInManager, userManager, viewModel);
+
+            if (!success)
+            {
+                TempData["Error"] = message;
+                return View(viewModel);
             }
-            return View(model);
+
+            return message switch
+            {
+                "Admin" => RedirectToAction("Index", "Admin"),
+                _ => RedirectToAction("Index", "Home")
+            };
         }
+
         public IActionResult Register()
         {
             return View();

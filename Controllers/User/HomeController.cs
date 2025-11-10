@@ -20,7 +20,6 @@ namespace University_Portal.Controllers.User
             _logger = logger;
             _context = context;
         }
-        // This returns all Events after user launch the Index Page
         public async Task<IActionResult> Index()
         {
             var events = await _context.Events
