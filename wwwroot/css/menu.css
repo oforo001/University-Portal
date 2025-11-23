@@ -1,0 +1,72 @@
+﻿body {
+    font-family: Arial, sans-serif;
+}
+
+.side-menu {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: white;
+    background-image: url('https://portal.wsb.pl/image/layout_set_logo?img_id=13113249&t=1748636925875');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 80% auto;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 160px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+    .side-menu nav {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .side-menu a {
+        padding: 12px 20px;
+        text-decoration: none;
+        font-size: 18px;
+        color: black;
+        display: block;
+        transition: 0.2s;
+    }
+
+        .side-menu a:hover {
+            background-color: #0056a4;
+            color: white;
+        }
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 36px;
+    color: #0056a4;
+    text-decoration: none;
+}
+
+.open-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #0056a4;
+    color: white;
+    padding: 10px 15px;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+    .open-btn:hover {
+        background-color: #004080;
+    }
+
+@login-section {
+    padding: 20px;
+}
