@@ -1,0 +1,82 @@
+﻿@model University_Portal.ViewModels.BlogViewModel.PostViewModel
+
+@{
+    ViewData["Title"] = "Create Post";
+}
+<link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
+
+<div class="content-wrapper">
+    <div class="form-card">
+
+        <!-- Header -->
+        <div class="page-header">
+            <h2>@ViewData["Title"]</h2>
+            <a asp-action="Index" asp-controller="Post" class="btn btn-outline-secondary">
+                Back to List
+            </a>
+        </div>
+
+        <hr />
+
+        <!-- Form -->
+        <form asp-action="Create"
+              asp-controller="Post"
+              method="post"
+              enctype="multipart/form-data">
+
+            <div class="form-group">
+                <label asp-for="Post.Title" class="form-label"></label>
+                <input asp-for="Post.Title" class="form-control" />
+                <span asp-validation-for="Post.Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Post.CategoryId" class="form-label"></label>
+                <select asp-for="Post.CategoryId"
+                        asp-items="Model.Categories"
+                        class="form-control">
+                    <option value="">-- Select Category --</option>
+                </select>
+                <span asp-validation-for="Post.CategoryId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Post.Author" class="form-label"></label>
+                <input asp-for="Post.Author" class="form-control" />
+                <span asp-validation-for="Post.Author" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Post.Content" class="form-label"></label>
+                <textarea asp-for="Post.Content"
+                          class="form-control"
+                          rows="5"></textarea>
+                <span asp-validation-for="Post.Content" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FeatureImage" class="form-label"></label>
+                <input asp-for="FeatureImage"
+                       type="file"
+                       class="form-control" />
+            </div>
+
+            <div class="btn-group-actions">
+                <button type="submit" class="btn btn-primary">
+                    Create
+                </button>
+
+                <a asp-action="Index"
+                   asp-controller="Post"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
