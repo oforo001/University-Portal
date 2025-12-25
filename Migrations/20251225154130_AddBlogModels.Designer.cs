@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using University_Portal.Data;
 
@@ -10,9 +11,11 @@ using University_Portal.Data;
 namespace University_Portal.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20251225154130_AddBlogModels")]
+    partial class AddBlogModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -41,6 +44,20 @@ namespace University_Portal.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -235,23 +252,6 @@ namespace University_Portal.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Technology"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Health"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "LifeStyle"
-                        });
                 });
 
             modelBuilder.Entity("University_Portal.Models.Comment", b =>
@@ -387,38 +387,6 @@ namespace University_Portal.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Posts");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Author = "John Doe",
-                            CategoryId = 1,
-                            Content = "Content of Tech Post 1",
-                            FeatureImagePath = "tech_image.jpg",
-                            PublishDate = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Title = "Tech Post 1"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Author = "Jane Doe",
-                            CategoryId = 2,
-                            Content = "Content of Health Post 1",
-                            FeatureImagePath = "health_image.jpg",
-                            PublishDate = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Title = "Health Post 1"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Author = "Alex Smith",
-                            CategoryId = 3,
-                            Content = "Content of Lifestyle Post 1",
-                            FeatureImagePath = "lifestyle_image.jpg",
-                            PublishDate = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Title = "Lifestyle Post 1"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
