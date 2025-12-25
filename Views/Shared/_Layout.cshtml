@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - University-Portal</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootswatch/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/menu.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/University-Portal.styles.css" asp-append-version="true" />
@@ -20,6 +20,7 @@
 
         <nav>
             <a asp-controller="Home" asp-action="Index">Home</a>
+            <a asp-controller="Post" asp-action="Create">Blog</a>
 
             @if (User.IsInRole("Admin"))
             {
