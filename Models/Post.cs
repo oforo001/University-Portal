@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace University_Portal.Models
@@ -19,7 +20,7 @@ namespace University_Portal.Models
         [Required]
         [StringLength(200, MinimumLength = 2)]
         public string Author { get; set; }
-
+        [ValidateNever]
         public string? FeatureImagePath { get; set; }
 
         public DateTime PublishDate { get; set; } = DateTime.UtcNow;
@@ -27,7 +28,7 @@ namespace University_Portal.Models
         [ForeignKey(nameof(Category))]
         public int CategoryId { get; set; }
 
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
