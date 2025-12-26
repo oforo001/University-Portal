@@ -20,11 +20,12 @@
 
         <nav>
             <a asp-controller="Home" asp-action="Index">Home</a>
-            <a asp-controller="Post" asp-action="Create">Blog</a>
+            <a asp-controller="Post" asp-action="Index">Blog</a>
 
             @if (User.IsInRole("Admin"))
             {
                 <a asp-controller="Admin" asp-action="CreateEvent">➕ Create event</a>
+                <a asp-controller="Post" asp-action="Create">➕ Create post</a>
             }
 
             <a asp-controller="Home" asp-action="Privacy">Privacy</a>
