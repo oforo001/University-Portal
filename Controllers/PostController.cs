@@ -38,6 +38,22 @@ namespace University_Portal.Controllers
 
             return View(posts);
         }
+        [HttpGet]
+        public IActionResult Details(int id)
+        {
+            if(id == null)
+            {
+                return NotFound();
+            }
+
+            var post = _context.Posts.Include(p => p.Category).Include(p => p.Comments)
+                .FirstOrDefault(p => p.Id == id);
+            if (post == null)
+            {
+                return NotFound();
+            }
+            return View(post);
+        }
 
         [HttpGet]
         public IActionResult Create()
@@ -102,23 +118,25 @@ namespace University_Portal.Controllers
 
         private async Task<string> UploadFileToFolder(IFormFile file)
         {
-            var ext = Path.GetExtension(file.FileName);
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             var fileName = $"{Guid.NewGuid()}{ext}";
 
-            var imagesFolderPath = Path.Combine(
+            var uploadsFolderPath = Path.Combine(
                 _webHostEnvironment.WebRootPath,
-                "images"
+                "uploads",
+                "posts"
             );
 
-            if (!Directory.Exists(imagesFolderPath))
-                Directory.CreateDirectory(imagesFolderPath);
+            if (!Directory.Exists(uploadsFolderPath))
+                Directory.CreateDirectory(uploadsFolderPath);
 
-            var filePath = Path.Combine(imagesFolderPath, fileName);
+            var filePath = Path.Combine(uploadsFolderPath, fileName);
 
             await using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
 
-            return Path.Combine("images", fileName).Replace("\\", "/");
+            return $"/uploads/posts/{fileName}";
         }
+
     }
 }
