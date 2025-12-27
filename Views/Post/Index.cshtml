@@ -1,4 +1,5 @@
-﻿@model IEnumerable<University_Portal.Models.Post>
+﻿@using University_Portal.Helpers
+@model IEnumerable<University_Portal.Models.Post>
 
 @{
     ViewData["Title"] = "Blog Posts";
@@ -36,7 +37,7 @@
 
                 @if (!string.IsNullOrEmpty(post.FeatureImagePath))
                 {
-                    <img src="~/@post.FeatureImagePath"
+                    <img src="@Url.Content(post.FeatureImagePath)"
                          class="card-img-top"
                          alt="@post.Title"
                          style="height:260px; object-fit:cover;" />
@@ -60,11 +61,16 @@
                         @post.PublishDate.ToString("MMM dd, yyyy")
                     </small>
 
-                    <div class="post-content preview mb-3">
-                        @Html.Raw(post.Content)
-                    </div>
+                    @{
+                        var content = RemoveHtmlTagHelper.RemoveHtmlTags(post.Content);
+                    }
+
+                    <p class="card-text">
+                        @(content.Length > 100 ? content.Substring(0, 100) + "..." : content)
+                    </p>
 
                     <a asp-action="Details"
+                       asp-controller="Post"
                        asp-route-id="@post.Id"
                        class="btn btn-outline-primary mt-auto">
                         Read more →
