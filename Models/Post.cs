@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,6 +27,7 @@ namespace University_Portal.Models
         public DateTime PublishDate { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(Category))]
+        [DisplayName("Category")]
         public int CategoryId { get; set; }
 
         public Category? Category { get; set; }
