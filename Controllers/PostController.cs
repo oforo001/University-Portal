@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using University_Portal.Data;
@@ -39,6 +40,7 @@ namespace University_Portal.Controllers
             return View(posts);
         }
         [HttpGet]
+        [Authorize]
         public IActionResult Details(int id)
         {
             if(id == null)
@@ -56,6 +58,7 @@ namespace University_Portal.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles ="Admin")]
         public IActionResult Create()
         {
             return View(new PostViewModel
@@ -70,6 +73,7 @@ namespace University_Portal.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PostViewModel postViewModel)
         {
@@ -78,6 +82,8 @@ namespace University_Portal.Controllers
                 ReloadCategories(postViewModel);
                 return View(postViewModel);
             }
+            postViewModel.Post.Id = 0;
+
             if (postViewModel.FeatureImage != null && postViewModel.FeatureImage.Length > 0)
             {
                 if (postViewModel.FeatureImage.Length > MaxFileSize)
@@ -106,6 +112,105 @@ namespace University_Portal.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if(id == null)
+            {
+                return NotFound();
+            }
+
+            var postFromDB = await _context.Posts.FirstOrDefaultAsync(post => post.Id == id);
+            if (postFromDB == null) 
+            {
+                return NotFound();
+            }
+
+            EditPostViewModel editPostViewModel = new EditPostViewModel
+            {
+                Post = postFromDB,
+                Categories = _context.Categories
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList()
+            };
+            return View(editPostViewModel);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(EditPostViewModel editPostViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(editPostViewModel);
+            }
+
+            var postFromDB = await _context.Posts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == editPostViewModel.Post.Id);
+
+            if(editPostViewModel.FeatureImage != null)
+            {
+                var inputFileExtension = Path.GetExtension(editPostViewModel.FeatureImage.FileName).ToLower();
+                bool isAllowed = _allowedExtensions.Contains(inputFileExtension);
+
+                if (!isAllowed)
+                {
+                    ModelState.AddModelError("", "Invalid image format. Allowed formats: .jpg, jpeg, png");
+                    return View(editPostViewModel);
+                }
+                var existingFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", Path.GetFileName(postFromDB.FeatureImagePath));
+
+                if (System.IO.File.Exists(existingFilePath))
+                {
+                    System.IO.File.Delete(existingFilePath);
+                }
+
+                editPostViewModel.Post.FeatureImagePath = await UploadFileToFolder(editPostViewModel.FeatureImage);
+            }
+            else
+            {
+                editPostViewModel.Post.FeatureImagePath = postFromDB.FeatureImagePath;
+            }
+            _context.Posts.Update(editPostViewModel.Post);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index");
+
+        }
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken] // to prevent CSRF attacks
+        public async Task<JsonResult> AddComment([FromBody] Comment comment)
+        {
+            comment.CommentDate = DateTime.UtcNow;
+
+            await _context.Comments.AddAsync(comment);
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                username = comment.UserName,
+                commentDate = comment.CommentDate.ToString("MMMM dd, yyyy"),
+                content = comment.Content
+            });
+        }
+
+      
+        [HttpPost]
+        [Authorize(Roles ="Admin")]
+        [ValidateAntiForgeryToken] // tp prevent CSRF attacks
+        public async Task<IActionResult> Delete(int id)
+        {
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null) return NotFound();
+
+            _context.Posts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
         private void ReloadCategories(PostViewModel model)
         {
             model.Categories = _context.Categories

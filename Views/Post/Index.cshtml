@@ -3,31 +3,45 @@
 
 @{
     ViewData["Title"] = "Blog Posts";
+    int? selectedCategoryId = Context.Request.Query["categoryId"].FirstOrDefault() != null
+        ? int.Parse(Context.Request.Query["categoryId"])
+        : (int?)null;
 }
 
-<link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/createpost.css" asp-append-version="true" />
 
 <div class="text-center mb-4">
+
+    <a asp-action="Index"
+       class="badge rounded-pill px-3 py-2 me-2 category-badge
+              @(selectedCategoryId == null ? "bg-dark text-white" : "bg-warning text-dark")">
+        All
+    </a>
+
     @if (ViewBag.Categories != null)
     {
         foreach (var category in ViewBag.Categories)
         {
             <a asp-action="Index"
                asp-route-categoryId="@category.Id"
-               class="badge rounded-pill bg-warning text-dark px-3 py-2 me-2 category-badge">
+               class="badge rounded-pill px-3 py-2 me-2 category-badge
+                      @(selectedCategoryId == category.Id ? "bg-dark text-white" : "bg-warning text-dark")">
                 @category.Name
             </a>
         }
     }
 </div>
 
-<div class="text-end mb-4">
-    <a class="btn btn-primary shadow-sm"
-       asp-controller="Post"
-       asp-action="Create">
-        + Create New Post
-    </a>
-</div>
+@if (User.IsInRole("Admin"))
+{
+    <div class="text-end mb-4">
+        <a class="btn btn-primary shadow-sm"
+           asp-controller="Post"
+           asp-action="Create">
+            + Create New Post
+        </a>
+    </div>
+}
 
 <div class="row row-cols-1 row-cols-md-3 g-4">
     @foreach (var post in Model)
@@ -66,7 +80,9 @@
                     }
 
                     <p class="card-text">
-                        @(content.Length > 100 ? content.Substring(0, 100) + "..." : content)
+                        @(content.Length > 100
+                            ? content.Substring(0, 100) + "..."
+                            : content)
                     </p>
 
                     <a asp-action="Details"
