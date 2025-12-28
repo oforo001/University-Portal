@@ -15,7 +15,7 @@ namespace University_Portal.Models
         public string Title { get; set; }
 
         [Required]
-        [StringLength(100000, MinimumLength = 50)]
+        [StringLength(100000, MinimumLength = 5)]
         public string Content { get; set; }
 
         [Required]
