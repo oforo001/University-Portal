@@ -1,4 +1,5 @@
 ﻿@model Post
+@Html.AntiForgeryToken()
 
 @{
     ViewData["Title"] = Model.Title;
@@ -6,65 +7,220 @@
 
 <link rel="stylesheet" href="~/css/details.css" asp-append-version="true" />
 
-<div class="post-container">
+<div id="pageWrapper">
 
-    <a asp-controller="Post"
-       asp-action="Index"
-       class="back-button">
-        ← Back to list
-    </a>
+    <div class="post-container">
 
-    <div class="post-image-wrapper">
-        <img src="@Url.Content(Model.FeatureImagePath)"
-             alt="@Model.Title"
-             class="post-image" />
-    </div>
+        <a asp-controller="Post"
+           asp-action="Index"
+           class="back-button">
+            ← Back to list
+        </a>
 
-    <div class="post-header">
-        <h1 class="post-title">@Model.Title</h1>
-
-        <div class="post-meta">
-            <span>By @Model.Author</span>
-            <span>@Model.PublishDate.ToString("MMMM dd, yyyy")</span>
-            <span>@Model.Category?.Name</span>
+        <div class="post-image-wrapper">
+            <img src="@Url.Content(Model.FeatureImagePath)"
+                 alt="@Model.Title"
+                 class="post-image" />
         </div>
-    </div>
 
-    <div class="content-card">
-        <div class="post-content">
-            @Html.Raw(Model.Content)
+        <div class="post-header">
+            <h1 class="post-title">@Model.Title</h1>
+
+            <div class="post-meta">
+                <span>By @Model.Author</span>
+                <span>@Model.PublishDate.ToString("MMMM dd, yyyy")</span>
+                <span>@Model.Category?.Name</span>
+            </div>
         </div>
-    </div>
 
-    <div class="post-actions">
-        <a class="btn btn-outline-secondary">Edit</a>
-        <a class="btn btn-outline-danger">Delete</a>
-    </div>
+        <div class="content-card">
+            <div class="post-content">
+                @Html.Raw(Model.Content)
+            </div>
+        </div>
 
-    <div class="comments-section">
-        <div class="comments-title">Comments</div>
-
-        @if (Model.Comments.Any())
+        @if (User.IsInRole("Admin"))
         {
-            foreach (var comment in Model.Comments)
-            {
-                <div class="comment">
-                    <div class="comment-header">
-                        <div class="comment-author">@comment.UserName</div>
-                        <div class="comment-date">
-                            @comment.CommentDate.ToString("MMM dd, yyyy")
+            <div class="post-actions">
+                <a asp-controller="Post"
+                   asp-action="Edit"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-secondary">
+                    Edit
+                </a>
+
+                <button id="openDeleteModal"
+                        class="btn btn-outline-danger">
+                    Delete
+                </button>
+            </div>
+        }
+
+        <div class="comments-section">
+            <div class="comments-title">Comments</div>
+
+            <div id="commentsContainer">
+                @if (Model.Comments.Any())
+                {
+                    foreach (var comment in Model.Comments)
+                    {
+                        <div class="comment">
+                            <div class="comment-header">
+                                <div class="comment-author">@comment.UserName</div>
+                                <div class="comment-date">
+                                    @comment.CommentDate.ToString("MMM dd, yyyy")
+                                </div>
+                            </div>
+                            <div class="comment-content">
+                                @comment.Content
+                            </div>
                         </div>
-                    </div>
-                    <div class="comment-content">
-                        @comment.Content
+                    }
+                }
+                else
+                {
+                    <p class="no-comments" id="noCommentsText">
+                        No comments yet. Be the first to comment.
+                    </p>
+                }
+            </div>
+
+            <hr />
+
+            <div class="add-comment-card">
+
+                <div class="add-comment-header">
+                    <div class="avatar">💬</div>
+                    <div>
+                        <h4>Add a comment</h4>
+                        <p>Join the discussion</p>
                     </div>
                 </div>
-            }
-        }
-        else
-        {
-            <p class="no-comments">No comments yet. Be the first to comment.</p>
-        }
-    </div>
 
+                <form id="commentForm" class="add-comment-form">
+
+                    <div class="input-group">
+                        <input id="UserName"
+                               name="UserName"
+                               placeholder="Your name"
+                               required />
+                    </div>
+
+                    <div class="input-group">
+                        <textarea id="Content"
+                                  name="Content"
+                                  rows="3"
+                                  placeholder="Write something thoughtful..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="submit-row">
+                        <span class="hint">Be respectful & constructive</span>
+                        <button type="submit" class="submit-btn">
+                            Post Comment →
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div id="deleteOverlay" class="delete-overlay">
+    <div class="delete-modal">
+        <h4>Delete Post?</h4>
+        <p>This action cannot be undone.</p>
+
+        <div class="delete-actions">
+            <button id="cancelDelete" class="btn btn-secondary">
+                Cancel
+            </button>
+
+            <button id="confirmDelete" class="btn btn-danger">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(document).ready(function () {
+
+        function getCsrfToken() {
+            return $('input[name="__RequestVerificationToken"]').val();
+        }
+
+        /* ================= COMMENTS ================= */
+        $("#commentForm").on("submit", function (e) {
+            e.preventDefault();
+
+            const userName = $("#UserName").val().trim();
+            const content = $("#Content").val().trim();
+            const postId = @Model.Id;
+
+            if (!userName || !content) return;
+
+            $.ajax({
+                url: "@Url.Action("AddComment", "Post")",
+                type: "POST",
+                contentType: "application/json",
+                headers: {
+                    'RequestVerificationToken': getCsrfToken()
+                },
+                data: JSON.stringify({ userName, content, postId }),
+                success: function (response) {
+
+                    $("#noCommentsText").remove();
+
+                    const commentHtml = `
+                        <div class="comment">
+                            <div class="comment-header">
+                                <div class="comment-author">${response.username}</div>
+                                <div class="comment-date">${response.commentDate}</div>
+                            </div>
+                            <div class="comment-content">${response.content}</div>
+                        </div>
+                    `;
+
+                    $("#commentsContainer").prepend(commentHtml);
+                    $("#commentForm")[0].reset();
+                },
+                error: function () {
+                    alert("Failed to add comment.");
+                }
+            });
+        });
+
+        /* ================= DELETE ================= */
+        $("#openDeleteModal").click(function () {
+            $("#deleteOverlay").addClass("active");
+            $("#pageWrapper").addClass("blurred");
+        });
+
+        $("#cancelDelete").click(function () {
+            $("#deleteOverlay").removeClass("active");
+            $("#pageWrapper").removeClass("blurred");
+        });
+
+        $("#confirmDelete").click(function () {
+            $.ajax({
+                url: "@Url.Action("Delete", "Post")",
+                type: "POST",
+                headers: {
+                    'RequestVerificationToken': getCsrfToken()
+                },
+                data: { id: @Model.Id },
+                success: function () {
+                    window.location.href = "@Url.Action("Index", "Post")";
+                },
+                error: function () {
+                    alert("Delete failed.");
+                }
+            });
+        });
+
+    });
+</script>
+}
