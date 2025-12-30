@@ -1,0 +1,70 @@
+﻿
+#pageWrapper {
+    transition: filter 0.3s ease-in-out;
+}
+
+.delete-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+    .delete-overlay.active {
+        display: flex;
+    }
+
+.delete-modal {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 300px;
+    text-align: center;
+}
+
+.delete-actions {
+    margin-top: 15px;
+}
+
+.table th {
+    background-color: #f7f7f7;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.table th, .table td {
+    padding: 12px;
+    text-align: center;
+}
+
+.badge {
+    font-size: 0.85rem;
+}
+
+    .badge.bg-success {
+        background-color: #28a745;
+    }
+
+    .badge.bg-danger {
+        background-color: #dc3545;
+    }
+
+.btn-link:hover {
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+#pageWrapper.blurred {
+    filter: blur(4px);
+}
