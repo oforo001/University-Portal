@@ -13,21 +13,21 @@ namespace University_Portal.Controllers
         private readonly UserManager<AppUser> userManager;
         public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager)
         {
-            this.signInManager=signInManager;
-            this.userManager=userManager;
+            this.signInManager = signInManager;
+            this.userManager = userManager;
         }
         public IActionResult Login()
         {
             return View();
         }
         [HttpGet]
-        public async Task<IActionResult> AccountSetup() 
+        public async Task<IActionResult> AccountSetup()
         {
             var isAdminFound = await userManager.GetUsersInRoleAsync("Admin");
 
             if (isAdminFound.Any())
             {
-                return RedirectToAction("Login","Account");
+                return RedirectToAction("Login", "Account");
             }
             return View();
         }
@@ -74,7 +74,7 @@ namespace University_Portal.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)  
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             // this IActionResult assums there is only one Admin created by first Data seeding -> all new registration Role=User
             if (ModelState.IsValid)
@@ -84,12 +84,14 @@ namespace University_Portal.Controllers
                     FullName = model.Name,
                     Email = model.Email,
                     UserName = model.Email,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now
                 };
                 var createdUser = await userManager.CreateAsync(user, model.Password);
                 if (createdUser.Succeeded)
                 {
                     // if registration was successfull assign the registered entity 'user' role
-                    await userManager.AddToRoleAsync(user, "User"); 
+                    await userManager.AddToRoleAsync(user, "User");
                     return RedirectToAction("Login", "Account");
                 }
                 else

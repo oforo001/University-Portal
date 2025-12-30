@@ -1,0 +1,209 @@
+﻿@model IEnumerable<University_Portal.ViewModels.AdminViewModels.UserListViewModel>
+
+@{
+    ViewData["Title"] = "Zarządzanie użytkownikami";
+}
+
+@Html.AntiForgeryToken()
+
+<link rel="stylesheet" href="~/css/usermanagement.css" asp-append-version="true" />
+
+<div id="pageWrapper">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Zarządzanie użytkownikami</h4>
+        <a asp-action="CreateAdmin" class="btn btn-danger px-4">
+            + Dodaj użytkownika
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Imię i nazwisko</th>
+                        <th>E-mail</th>
+                        <th>Uprawnienia</th>
+                        <th>Data utworzenia</th>
+                        <th>Ostatnie logowanie</th>
+                        <th>Ostatnia aktualizacja</th>
+                        <th>Status</th>
+                        <th class="text-end">Akcje</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+
+                            <td>
+                                @foreach (var role in user.Roles)
+                                {
+                                    <span class="badge bg-secondary me-1">@role</span>
+                                }
+                            </td>
+
+                            <td>@user.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+
+                            <td>
+                                @(user.LastLoginAt.HasValue
+                                    ? user.LastLoginAt.Value.ToString("dd MMM yyyy HH:mm")
+                                    : "-")
+                            </td>
+
+                            <td>
+                                @(user.LastUpdatedAt.HasValue
+                                    ? user.LastUpdatedAt.Value.ToString("dd MMM yyyy HH:mm")
+                                    : "-")
+                            </td>
+
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktywny</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Nieaktywny</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-dark p-0"
+                                            type="button"
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical fs-5"></i>
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-action="Edit"
+                                               asp-route-id="@user.Id">
+                                                <i class="bi bi-pencil me-2"></i>Edytuj
+                                            </a>
+                                        </li>
+
+                                        <li><hr class="dropdown-divider" /></li>
+
+                                        @if (user.IsActive)
+                                        {
+                                            <li>
+                                                <form asp-action="Deactivate" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-slash-circle me-2"></i>Dezaktywuj
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li>
+                                                <form asp-action="Activate" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-check-circle me-2"></i>Aktywuj
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        }
+
+                                        <li><hr class="dropdown-divider" /></li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item text-danger open-delete"
+                                                    data-user-id="@user.Id">
+                                                <i class="bi bi-trash me-2"></i>Usuń
+                                            </button>
+                                        </li>
+
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<div id="deleteOverlay" class="delete-overlay">
+    <div class="delete-modal">
+        <h4>Usunąć użytkownika?</h4>
+        <p>Tej operacji nie można cofnąć.</p>
+
+        <div class="delete-actions">
+            <button id="cancelDelete" class="btn btn-secondary">
+                Anuluj
+            </button>
+
+            <button id="confirmDelete" class="btn btn-danger">
+                Usuń
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            let selectedUserId = null;
+
+            function getCsrfToken() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            $(".open-delete").on("click", function () {
+                selectedUserId = $(this).data("user-id");
+                $("#deleteOverlay").addClass("active");
+                $("#pageWrapper").addClass("blurred");
+            });
+
+            $("#cancelDelete").on("click", function () {
+                selectedUserId = null;
+                $("#deleteOverlay").removeClass("active");
+                $("#pageWrapper").removeClass("blurred");
+            });
+
+            $("#confirmDelete").on("click", function () {
+                if (!selectedUserId) return;
+
+                $.ajax({
+                    url: "@Url.Action("Delete", "UserManagement")",
+                    type: "POST",
+                    headers: {
+                        'RequestVerificationToken': getCsrfToken()
+                    },
+                    data: { id: selectedUserId },
+                    success: function (res) {
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        let msg = "Wystąpił błąd.";
+
+                        if (xhr.responseJSON?.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+
+                        alert(msg);
+                    }
+                });
+            });
+
+        });
+    </script>
+}

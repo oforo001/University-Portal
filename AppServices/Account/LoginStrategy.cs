@@ -24,8 +24,15 @@ namespace University_Portal.AppServices.Account
             if (model == null)
                 return (false, "Nieprawidłowe dane logowania.");
 
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return (false, "Niepoprawny adres e-mail lub hasło.");
+
+            if (!user.IsActive)
+                return (false, "Konto zostało dezaktywowane.");
+
             var result = await _signInManager.PasswordSignInAsync(
-                model.Email,
+                user,
                 model.Password,
                 model.RememberMe,
                 lockoutOnFailure: false);
@@ -33,14 +40,15 @@ namespace University_Portal.AppServices.Account
             if (!result.Succeeded)
                 return (false, "Niepoprawny adres e-mail lub hasło.");
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-                return (false, "Użytkownik nie został znaleziony.");
+            //updates the AppUser.LastLoginAt for Usermanagement View
+            user.LastLoginAt = DateTime.Now;
+            await _userManager.UpdateAsync(user);
 
             var roles = await _userManager.GetRolesAsync(user);
             var role = roles.FirstOrDefault() ?? "User";
 
             return (true, role);
         }
+
     }
 }
