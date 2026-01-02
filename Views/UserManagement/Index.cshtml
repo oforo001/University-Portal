@@ -8,13 +8,18 @@
 
 <link rel="stylesheet" href="~/css/usermanagement.css" asp-append-version="true" />
 
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
 <div id="pageWrapper">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold mb-0">Zarządzanie użytkownikami</h4>
-        <a asp-action="CreateAdmin" class="btn btn-danger px-4">
+
+        <button class="btn btn-danger px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#addUserModal">
             + Dodaj użytkownika
-        </a>
+        </button>
     </div>
 
     <div class="card shadow-sm border-0">
@@ -27,40 +32,24 @@
                         <th>Uprawnienia</th>
                         <th>Data utworzenia</th>
                         <th>Ostatnie logowanie</th>
-                        <th>Ostatnia aktualizacja</th>
                         <th>Status</th>
                         <th class="text-end">Akcje</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     @foreach (var user in Model)
                     {
                         <tr>
-                            <td>@user.FullName</td>
+                            <td class="fw-semibold">@user.FullName</td>
                             <td>@user.Email</td>
-
                             <td>
                                 @foreach (var role in user.Roles)
                                 {
                                     <span class="badge bg-secondary me-1">@role</span>
                                 }
                             </td>
-
                             <td>@user.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
-
-                            <td>
-                                @(user.LastLoginAt.HasValue
-                                    ? user.LastLoginAt.Value.ToString("dd MMM yyyy HH:mm")
-                                    : "-")
-                            </td>
-
-                            <td>
-                                @(user.LastUpdatedAt.HasValue
-                                    ? user.LastUpdatedAt.Value.ToString("dd MMM yyyy HH:mm")
-                                    : "-")
-                            </td>
-
+                            <td>@(user.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "-")</td>
                             <td>
                                 @if (user.IsActive)
                                 {
@@ -71,11 +60,9 @@
                                     <span class="badge bg-danger">Nieaktywny</span>
                                 }
                             </td>
-
                             <td class="text-end">
                                 <div class="dropdown">
                                     <button class="btn btn-link text-dark p-0"
-                                            type="button"
                                             data-bs-toggle="dropdown">
                                         <i class="bi bi-three-dots-vertical fs-5"></i>
                                     </button>
@@ -95,33 +82,26 @@
                                         @if (user.IsActive)
                                         {
                                             <li>
-                                                <form asp-action="Deactivate" method="post">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@user.Id" />
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-slash-circle me-2"></i>Dezaktywuj
-                                                    </button>
-                                                </form>
+                                                <button class="dropdown-item deactivate-user"
+                                                        data-id="@user.Id">
+                                                    <i class="bi bi-slash-circle me-2"></i>Dezaktywuj
+                                                </button>
                                             </li>
                                         }
                                         else
                                         {
                                             <li>
-                                                <form asp-action="Activate" method="post">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@user.Id" />
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-check-circle me-2"></i>Aktywuj
-                                                    </button>
-                                                </form>
+                                                <button class="dropdown-item activate-user"
+                                                        data-id="@user.Id">
+                                                    <i class="bi bi-check-circle me-2"></i>Aktywuj
+                                                </button>
                                             </li>
                                         }
 
                                         <li><hr class="dropdown-divider" /></li>
 
                                         <li>
-                                            <button type="button"
-                                                    class="dropdown-item text-danger open-delete"
+                                            <button class="dropdown-item text-danger open-delete"
                                                     data-user-id="@user.Id">
                                                 <i class="bi bi-trash me-2"></i>Usuń
                                             </button>
@@ -133,74 +113,245 @@
                         </tr>
                     }
                 </tbody>
-
             </table>
         </div>
     </div>
-
 </div>
 
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg rounded-4 border-0">
+
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Dodaj użytkownika</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body pt-3">
+                <form id="addUserForm">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Imię i nazwisko</label>
+                            <input type="text"
+                                   id="addFullName"
+                                   class="form-control"
+                                   placeholder="Jan Kowalski"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Adres e-mail</label>
+                            <input type="email"
+                                   id="addEmail"
+                                   class="form-control"
+                                   placeholder="jan.kowalski@firma.pl"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Hasło</label>
+                            <input type="password"
+                                   id="addPassword"
+                                   class="form-control"
+                                   placeholder="Minimum 8 znaków"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Rola</label>
+                            <select id="addRole" class="form-select">
+                                <option value="User">Użytkownik</option>
+                                <option value="Admin">Administrator</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="addIsActive"
+                                       checked />
+                                <label class="form-check-label">
+                                    Konto aktywne
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Anuluj
+                </button>
+
+                <button type="button"
+                        id="confirmAddUser"
+                        class="btn btn-danger px-4">
+                    Utwórz użytkownika
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 <div id="deleteOverlay" class="delete-overlay">
-    <div class="delete-modal">
-        <h4>Usunąć użytkownika?</h4>
-        <p>Tej operacji nie można cofnąć.</p>
+    <div class="delete-modal shadow rounded-4">
+        <h5 class="fw-bold mb-2">Usunąć użytkownika?</h5>
+        <p class="text-muted mb-4">Tej operacji nie można cofnąć.</p>
 
-        <div class="delete-actions">
-            <button id="cancelDelete" class="btn btn-secondary">
-                Anuluj
-            </button>
-
-            <button id="confirmDelete" class="btn btn-danger">
-                Usuń
-            </button>
+        <div class="d-flex justify-content-end gap-2">
+            <button id="cancelDelete" class="btn btn-secondary">Anuluj</button>
+            <button id="confirmDelete" class="btn btn-danger px-4">Usuń</button>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+        $(function () {
 
             let selectedUserId = null;
 
-            function getCsrfToken() {
+            function csrf() {
                 return $('input[name="__RequestVerificationToken"]').val();
             }
+            window.showToast = function (success, message) {
 
-            $(".open-delete").on("click", function () {
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+
+                const toastHtml = `
+                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
+                         role="alert" style="cursor:pointer;">
+                        <div class="toast-header ${typeClass} text-white border-0">
+                            <strong class="me-auto">
+                                ${success ? "Sukces" : "Błąd"}
+                            </strong>
+                            <button type="button" class="btn-close btn-close-white"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+
+                $("#toastContainer").append(toastHtml);
+
+                const toast = $("#" + toastId);
+
+                toast.on("click", function () {
+                    toast.fadeOut(300, () => toast.remove());
+                });
+
+                setTimeout(() => {
+                    toast.fadeOut(300, () => toast.remove());
+                }, 20000);
+            };
+            $("#confirmAddUser").on("click", function () {
+
+                const btn = $(this);
+                btn.prop("disabled", true);
+
+                const payload = {
+                    FullName: $("#addFullName").val(),
+                    Email: $("#addEmail").val(),
+                    Password: $("#addPassword").val(),
+                    Role: $("#addRole").val(),
+                    IsActive: $("#addIsActive").is(":checked")
+                };
+
+                $.ajax({
+                    url: "@Url.Action("Create", "UserManagement")",
+                    type: "POST",
+                    headers: { 'RequestVerificationToken': csrf() },
+                    data: payload,
+
+                    success: function (res) {
+                        showToast(true, res.message ?? "Użytkownik został utworzony.");
+
+                        const modalEl = document.getElementById("addUserModal");
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal.hide();
+
+                        $("#addUserForm")[0].reset();
+
+                        setTimeout(() => location.reload(), 800);
+                    },
+
+                    error: function (xhr) {
+                        const msg =
+                            xhr.responseJSON?.message ??
+                            "Wystąpił błąd podczas tworzenia użytkownika.";
+
+                        showToast(false, msg);
+                    },
+
+                    complete: function () {
+                        btn.prop("disabled", false);
+                    }
+                });
+            });
+
+
+            $(".activate-user").click(function () {
+                $.post({
+                    url: "@Url.Action("Activate", "UserManagement")",
+                    headers: { 'RequestVerificationToken': csrf() },
+                    data: { id: $(this).data("id") },
+                    success: res => {
+                        showToast(true, res.message);
+                        setTimeout(() => location.reload(), 800);
+                    },
+                    error: xhr => showToast(false, xhr.responseJSON?.message)
+                });
+            });
+
+            $(".deactivate-user").click(function () {
+                $.post({
+                    url: "@Url.Action("Deactivate", "UserManagement")",
+                    headers: { 'RequestVerificationToken': csrf() },
+                    data: { id: $(this).data("id") },
+                    success: res => {
+                        showToast(true, res.message);
+                        setTimeout(() => location.reload(), 800);
+                    },
+                    error: xhr => showToast(false, xhr.responseJSON?.message)
+                });
+            });
+
+            $(".open-delete").click(function () {
                 selectedUserId = $(this).data("user-id");
                 $("#deleteOverlay").addClass("active");
                 $("#pageWrapper").addClass("blurred");
             });
 
-            $("#cancelDelete").on("click", function () {
+            $("#cancelDelete").click(() => {
                 selectedUserId = null;
                 $("#deleteOverlay").removeClass("active");
                 $("#pageWrapper").removeClass("blurred");
             });
 
-            $("#confirmDelete").on("click", function () {
+            $("#confirmDelete").click(() => {
                 if (!selectedUserId) return;
 
-                $.ajax({
+                $.post({
                     url: "@Url.Action("Delete", "UserManagement")",
-                    type: "POST",
-                    headers: {
-                        'RequestVerificationToken': getCsrfToken()
-                    },
+                    headers: { 'RequestVerificationToken': csrf() },
                     data: { id: selectedUserId },
-                    success: function (res) {
-                        location.reload();
+                    success: res => {
+                        showToast(true, res.message);
+                        setTimeout(() => location.reload(), 800);
                     },
-                    error: function (xhr) {
-                        let msg = "Wystąpił błąd.";
-
-                        if (xhr.responseJSON?.message) {
-                            msg = xhr.responseJSON.message;
-                        }
-
-                        alert(msg);
-                    }
+                    error: xhr => showToast(false, xhr.responseJSON?.message)
                 });
             });
 
