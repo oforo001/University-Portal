@@ -46,6 +46,48 @@ namespace University_Portal.Controllers.Admin
 
             return View(userListViewModel);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(AddUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+
+                return BadRequest(new { message = string.Join(", ", errors) });
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Użytkownik z tym adresem e-mail już istnieje." });
+
+            if (!await _roleManager.RoleExistsAsync(model.Role))
+                return BadRequest(new { message = "Wybrana rola nie istnieje." });
+
+            var user = new AppUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FullName = model.FullName,
+                IsActive = model.IsActive,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return StatusCode(500, new { message = errors });
+            }
+
+            await _userManager.AddToRoleAsync(user, model.Role);
+
+            return Ok(new { message = "Użytkownik został utworzony." });
+        }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -53,31 +95,17 @@ namespace University_Portal.Controllers.Admin
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
-            {
-                TempData["Error"] = "Nie znaleziono użytkownika.";
-                return RedirectToAction("Index");
-            }
+                return NotFound(new { success = false, message = "Nie znaleziono użytkownika." });
 
-            if (!user.IsActive)
-            {
-                user.IsActive = true;
-                var result = await _userManager.UpdateAsync(user);
+            if (user.IsActive)
+                return BadRequest(new { success = false, message = "Użytkownik jest już aktywny." });
 
-                if (result.Succeeded)
-                {
-                    TempData["Success"] = "Użytkownik został pomyślnie aktywowany.";
-                }
-                else
-                {
-                    TempData["Error"] = "Wystąpił błąd podczas aktywowania użytkownika.";
-                }
-            }
-            else
-            {
-                TempData["Error"] = "Użytkownik jest już aktywny.";
-            }
+            user.IsActive = true;
+            var result = await _userManager.UpdateAsync(user);
 
-            return RedirectToAction("Index");
+            return result.Succeeded
+                ? Ok(new { success = true, message = "Użytkownik został aktywowany." })
+                : StatusCode(500, new { success = false, message = "Błąd podczas aktywowania użytkownika." });
         }
 
         [HttpPost]
@@ -86,31 +114,21 @@ namespace University_Portal.Controllers.Admin
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
-            {
-                TempData["Error"] = "Nie znaleziono użytkownika.";
-                return RedirectToAction("Index");
-            }
+                return NotFound(new { success = false, message = "Nie znaleziono użytkownika." });
 
-            if (user.IsActive)
-            {
-                user.IsActive = false;
-                var result = await _userManager.UpdateAsync(user);
+            var currentUserId =  _userManager.GetUserId(User);
+            if (currentUserId == user.Id)
+                return BadRequest(new { success = false, message = "Nie możesz deaktywowac własnego konta." });
 
-                if (result.Succeeded)
-                {
-                    TempData["Success"] = "Użytkownik został pomyślnie deaktywowany.";
-                }
-                else
-                {
-                    TempData["Error"] = "Wystąpił błąd podczas dezaktywowania użytkownika.";
-                }
-            }
-            else
-            {
-                TempData["Error"] = "Użytkownik jest już dezaktywowany.";
-            }
+            if (!user.IsActive)
+                return BadRequest(new { success = false, message = "Użytkownik jest już deaktywowany." });
 
-            return RedirectToAction("Index");
+            user.IsActive = false;
+            var result = await _userManager.UpdateAsync(user);
+
+            return result.Succeeded
+                ? Ok(new { success = true, message = "Użytkownik został deaktywowany." })
+                : StatusCode(500, new { success = false, message = "Błąd podczas deaktywowania użytkownika." });
         }
 
         [HttpPost]
