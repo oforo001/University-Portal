@@ -1,65 +1,220 @@
 ﻿@model IEnumerable<University_Portal.Models.Event>
+
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Admin Dashboard</h2>
-  
-</div>
-<p>Welcome, Admin!</p>
+@Html.AntiForgeryToken()
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+<link rel="stylesheet" href="~/css/action_effects.css" asp-append-version="true" />
 
-<h3>Events</h3>
-@if (Model.Any())
-{
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        @foreach (var ev in Model)
-        {
-            <div class="col">
-                <div class="card h-100 shadow-sm" style="min-height: 600px; font-size: 1.15em;">
-                    @if (!string.IsNullOrEmpty(ev.ImagePath))
-                    {
-                        <img src="~/@ev.ImagePath" alt="Event Image"
-                             class="card-img-top"
-                             style="height: 350px; object-fit: cover; border-radius: 0.6rem 0.6rem 0 0;"
-                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
-                    }
-                    else
-                    {
-                        <div class="bg-light d-flex align-items-center justify-content-center"
-                             style="height: 350px; border-radius: 0.6rem 0.6rem 0 0;">
-                            <span class="text-muted" style="font-size:1.3em;">No Image</span>
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<div id="pageWrapper">
+
+    <h3 class="mb-4">Events</h3>
+
+    @if (Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+            @foreach (var ev in Model)
+            {
+                <div class="col event-card" data-event-id="@ev.Id">
+                    <div class="card h-100 shadow-sm"
+                         style="min-height: 600px; font-size: 1.05rem;">
+
+                        @if (!string.IsNullOrEmpty(ev.ImagePath))
+                        {
+                            <img src="~/@ev.ImagePath"
+                                 alt="Event Image"
+                                 class="card-img-top"
+                                 style="height:350px;object-fit:cover;border-radius:.6rem .6rem 0 0;"
+                                 onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                        }
+                        else
+                        {
+                            <div class="bg-light d-flex align-items-center justify-content-center"
+                                 style="height:350px;border-radius:.6rem .6rem 0 0;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        }
+
+                        <div class="card-body d-flex flex-column p-4">
+
+                            <h4 class="text-center mb-3 fw-bold">
+                                @ev.Title
+                            </h4>
+
+                            <div class="text-muted mb-3"
+                                 style="min-height:70px;">
+                                @ev.Description
+                            </div>
+
+                            <p class="mt-auto mb-0">
+                                <strong>Date:</strong>
+                                @ev.Date.ToString("dd-MM-yyyy HH:mm")<br />
+                                <strong>Location:</strong>
+                                @ev.Location<br />
+                                <strong>Max Participants:</strong>
+                                @ev.MaxParticipants
+                            </p>
+
                         </div>
-                    }
-                    <div class="card-body d-flex flex-column p-4">
-                        <h4 class="card-title text-center mb-3" style="font-size: 2em;">@ev.Title</h4>
-                        <div class="mb-3 text-muted" style="font-size: 1.15em; min-height: 70px;">
-                            @ev.Description
+
+                        <div class="card-footer d-flex justify-content-between px-4 py-3">
+
+                            <a asp-action="EditEvent"
+                               asp-route-id="@ev.Id"
+                               class="btn btn-info text-white px-4">
+                                View
+                            </a>
+
+                            <button class="btn btn-danger px-4 open-delete"
+                                    data-event-id="@ev.Id">
+                                Delete
+                            </button>
+
                         </div>
-                        <p class="card-text mb-4 mt-auto" style="font-size:1.1em;">
-                            <strong>Date:</strong> @ev.Date.ToString("dd-MM-yyyy HH:mm")<br />
-                            <strong>Location:</strong> @ev.Location<br />
-                            <strong>Max Participants:</strong> @ev.MaxParticipants
-                        </p>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between px-4 py-3">
-                        <a asp-action="EditEvent" asp-route-id="@ev.Id" class="btn btn-info btn-lg text-white px-4">View</a>
-                        <form asp-action="DeleteEvent" asp-route-id="@ev.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this event?');">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-danger btn-lg px-4">Delete</button>
-                        </form>
                     </div>
                 </div>
-            </div>
-        }
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No events created yet.
+        </div>
+    }
+
+</div>
+
+<!-- DELETE OVERLAY -->
+<div id="deleteOverlay" class="delete-overlay">
+    <div class="delete-modal shadow rounded-4">
+        <h5 class="fw-bold mb-2">Delete event?</h5>
+        <p class="text-muted mb-4">This action cannot be undone.</p>
+
+        <div class="d-flex justify-content-end gap-2">
+            <button id="cancelDelete" class="btn btn-secondary">
+                Cancel
+            </button>
+            <button id="confirmDelete" class="btn btn-danger px-4">
+                Delete
+            </button>
+        </div>
     </div>
-}
-else
-{
-    <div class="alert alert-info">No events created yet.</div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+
+            let selectedEventId = null;
+
+            function csrf() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            window.showToast = function (success, message) {
+
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+
+                const toastHtml = `
+                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" style="cursor:pointer;">
+                        <div class="toast-header ${typeClass} text-white border-0">
+                            <strong class="me-auto">
+                                ${success ? "Success" : "Error"}
+                            </strong>
+                            <button type="button" class="btn-close btn-close-white"></button>
+                        </div>
+                        <div class="toast-body">${message}</div>
+                    </div>
+                `;
+
+                $("#toastContainer").append(toastHtml);
+
+                const toast = $("#" + toastId);
+
+                toast.on("click", function () {
+                    toast.fadeOut(300, () => toast.remove());
+                });
+
+                setTimeout(() => {
+                    toast.fadeOut(300, () => toast.remove());
+                }, 5000);
+            };
+            $(".open-delete").click(function () {
+                selectedEventId = $(this).data("event-id");
+                $("#deleteOverlay").addClass("active");
+                $("#pageWrapper").addClass("blurred");
+            });
+            $("#cancelDelete").click(function () {
+                selectedEventId = null;
+                $("#deleteOverlay").removeClass("active");
+                $("#pageWrapper").removeClass("blurred");
+            });
+            $("#confirmDelete").click(function () {
+
+                if (!selectedEventId) return;
+
+                const btn = $(this);
+                btn.prop("disabled", true);
+
+                $.ajax({
+                    url: "@Url.Action("DeleteEvent", "Admin")",
+                    type: "POST",
+                    headers: { 'RequestVerificationToken': csrf() },
+                    data: { id: selectedEventId },
+
+                    success: function (res) {
+
+                        showToast(true, res.message ?? "Event deleted successfully.");
+
+                        const card = $(`.event-card[data-event-id='${selectedEventId}']`);
+
+                        card.css({
+                            "transition": "all 0.3s ease",
+                            "opacity": "0",
+                            "transform": "scale(0.95)"
+                        });
+
+                        setTimeout(() => {
+                            card.remove();
+
+                            if ($(".event-card").length === 0) {
+                                $(".row").html(`
+                                    <div class="alert alert-info">
+                                        No events created yet.
+                                    </div>
+                                `);
+                            }
+
+                        }, 300);
+
+                        $("#deleteOverlay").removeClass("active");
+                        $("#pageWrapper").removeClass("blurred");
+
+                    },
+
+                    error: function (xhr) {
+                        showToast(false,
+                            xhr.responseJSON?.message ??
+                            "An error occurred while deleting the event."
+                        );
+                    },
+
+                    complete: function () {
+                        btn.prop("disabled", false);
+                        selectedEventId = null;
+                    }
+                });
+
+            });
+
+        });
+    </script>
 }

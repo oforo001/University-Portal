@@ -1,32 +1,46 @@
 ﻿
+
 .delete-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
-    display: none;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
     z-index: 1055;
 }
 
     .delete-overlay.active {
-        display: flex;
+        opacity: 1;
+        visibility: visible;
     }
 
+
 .delete-modal {
-    background: #fff;
-    padding: 2.5rem 2rem;
+    background: #ffffff;
     width: 440px;
-    max-width: 90%;
+    max-width: 92%;
+    padding: 2.25rem 2rem;
     text-align: center;
-    border-radius: 1.5rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18);
+    transform: translateY(-10px) scale(0.96);
+    transition: transform 0.25s ease;
 }
 
+.delete-overlay.active .delete-modal {
+    transform: translateY(0) scale(1);
+}
+
+
 .delete-icon {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.25rem auto;
     border-radius: 50%;
     background: rgba(220, 53, 69, 0.1);
     display: flex;
@@ -39,24 +53,62 @@
         color: #dc3545;
     }
 
+
+
+.delete-modal .button-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px; 
+    margin-top: 2rem; 
+}
+
+    .delete-modal .button-group .btn {
+        min-width: 120px;
+        height: 42px;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+
+.delete-modal .btn-outline-secondary {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+/* Improve Delete button depth */
+.delete-modal .btn-danger {
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+
+
+
 #pageWrapper.blurred {
     filter: blur(4px);
     pointer-events: none;
+    transition: filter 0.25s ease;
 }
+
 
 
 .table th {
     background-color: #f7f7f7;
 }
 
+.table th,
+.table td {
+    padding: 12px;
+    text-align: center;
+}
+
 .table tbody tr:hover {
     background-color: #f1f1f1;
 }
 
-.table th, .table td {
-    padding: 12px;
-    text-align: center;
-}
 
 .badge {
     font-size: 0.85rem;
@@ -70,6 +122,8 @@
         background-color: #dc3545;
     }
 
+
+
 .btn-link:hover {
     text-decoration: none;
 }
@@ -78,9 +132,8 @@
     background-color: #f8f9fa;
 }
 
-#pageWrapper.blurred {
-    filter: blur(4px);
-}
+
+
 .modal-backdrop.show {
     opacity: 0.65;
     backdrop-filter: blur(6px);
@@ -89,6 +142,7 @@
 .modal-content {
     border-radius: 1.25rem;
 }
+
 .modal.fade .modal-dialog {
     transform: scale(0.96);
     transition: transform 0.2s ease-out;
@@ -97,6 +151,8 @@
 .modal.show .modal-dialog {
     transform: scale(1);
 }
+
+
 
 .toast-container {
     position: fixed;
@@ -113,12 +169,12 @@
     max-width: 420px;
     padding: 1rem 1.25rem;
     border-radius: 0.75rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    animation: slideIn .3s ease-out;
-    background: #fff;
+    animation: slideIn 0.3s ease-out;
 }
 
     .toast-message.success {
@@ -155,6 +211,8 @@
     color: #6c757d;
 }
 
+
+
 @keyframes slideIn {
     from {
         transform: translateX(30px);
@@ -166,5 +224,3 @@
         opacity: 1;
     }
 }
-
-
