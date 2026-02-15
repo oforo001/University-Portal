@@ -97,42 +97,39 @@ namespace University_Portal.Controllers.Admin
             ModelState.Remove("Image");
 
             if (!ModelState.IsValid)
-            {
-                model.ImagePath = (await _context.Events.FindAsync(id))?.ImagePath;
-                return View(model);
-            }
+                return BadRequest(new { message = "Validation failed." });
 
-            var user = await _userManager.GetUserAsync(User) ?? throw new UnauthorizedAccessException();
-            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty;
+            var user = await _userManager.GetUserAsync(User)
+                ?? throw new UnauthorizedAccessException();
 
-            var editEventResult = await EventClient.EditEventAsync(_context, id, userRole, model, _env);
+            var userRole = (await _userManager.GetRolesAsync(user))
+                .FirstOrDefault() ?? string.Empty;
 
-            if (!editEventResult.Success)
-            {
-                ModelState.AddModelError(string.Empty, editEventResult.Message);
+            var result = await EventClient.EditEventAsync(_context, id, userRole, model, _env);
 
-                var ev = await _context.Events.FindAsync(id);
-                if (ev != null)
-                    model.ImagePath = ev.ImagePath;
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-                return View(model);
-            }
-
-            TempData["Success"] = editEventResult.Message;
-            return RedirectToAction(nameof(Index));
+            return Ok(new { message = result.Message });
         }
 
-        [HttpPost, ActionName("DeleteEvent")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult>DeleteEvent(int id)
-         {
-            var user = await _userManager.GetUserAsync(User) ?? throw new UnauthorizedAccessException();
-            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty;
+        public async Task<IActionResult> DeleteEvent(int id)
+        {
+            var user = await _userManager.GetUserAsync(User)
+                ?? throw new UnauthorizedAccessException();
 
-            var deleteEventResult = await EventClient.DeleteEventAsync(_context, id, userRole, _env);
+            var userRole = (await _userManager.GetRolesAsync(user))
+                .FirstOrDefault() ?? string.Empty;
 
-            TempData[deleteEventResult.Success ? "Success" : "Error"] = deleteEventResult.Message;
-            return RedirectToAction(nameof(Index));
+            var result = await EventClient.DeleteEventAsync(_context, id, userRole, _env);
+
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+
+            return Ok(new { message = result.Message });
         }
+
     }
 }

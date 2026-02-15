@@ -1,69 +1,105 @@
 ﻿@model University_Portal.ViewModels.AdminViewModels.EventCreateViewModel
 
-
 @{
     ViewData["Title"] = "Create Event";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Create Event</h2>
-        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Events</a>
-    </div>
+<link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+<div class="content-wrapper">
+    <div class="form-card">
 
-    <form asp-action="CreateEvent" method="post" enctype="multipart/form-data" class="needs-validation mt-3" novalidate>
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-        <div class="mb-3">
-            <label asp-for="Title" class="form-label"></label>
-            <input asp-for="Title" class="form-control" placeholder="Event Title" required />
-            <span asp-validation-for="Title" class="text-danger"></span>
+        <div class="page-header">
+            <h2>@ViewData["Title"]</h2>
+            <a asp-controller="Admin"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back to Events
+            </a>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Description" class="form-label"></label>
-            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the event" required></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+        <hr />
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
+        <form asp-action="CreateEvent"
+              asp-controller="Admin"
+              method="post"
+              enctype="multipart/form-data">
+
+            <div class="validation-summary">
+                <div asp-validation-summary="All" class="text-danger"></div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title"
+                       class="form-control"
+                       placeholder="Event Title" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Describe the event"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
                 <label asp-for="Date" class="form-label"></label>
-                <input asp-for="Date" type="datetime-local" class="form-control" required />
+                <input asp-for="Date"
+                       type="datetime-local"
+                       class="form-control" />
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
-            <div class="col-md-6 mb-3">
+
+            <div class="form-group">
                 <label asp-for="Location" class="form-label"></label>
-                <input asp-for="Location" class="form-control" placeholder="Building, room, or online link" required />
+                <input asp-for="Location"
+                       class="form-control"
+                       placeholder="Building, room, or online link" />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label asp-for="MaxParticipants" class="form-label"></label>
-                <input asp-for="MaxParticipants" class="form-control" type="number" min="1" required />
+            <div class="form-group">
+                <label class="form-label" for="MaxParticipants">Maksymalna liczba uczestników</label>
+                <input asp-for="MaxParticipants"
+                       type="number"
+                       min="1"
+                       class="form-control" />
                 <span asp-validation-for="MaxParticipants" class="text-danger"></span>
             </div>
-            <div class="col-md-6 mb-3">
-                <label asp-for="Image" class="form-label"></label>
-                <input asp-for="Image" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif" />
-                <span asp-validation-for="Image" class="text-danger"></span>
-                <div class="form-text">Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB.</div>
-            </div>
-        </div>
 
-        <button type="submit" class="btn btn-info text-white px-4">Create Event</button>
-    </form>
+
+            <div class="form-group">
+                <label asp-for="Image" class="form-label"></label>
+                <input asp-for="Image"
+                       type="file"
+                       accept=".jpg,.jpeg,.png,.gif"
+                       class="form-control" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB.
+                </small>
+            </div>
+
+            <div class="btn-group-actions">
+                <button type="submit" class="btn btn-primary">
+                    Create
+                </button>
+
+                <a asp-controller="Admin"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }
