@@ -4,117 +4,161 @@
     ViewData["Title"] = "Edit Event";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Edit Event</h2>
-        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Events</a>
-    </div>
+<link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+<div class="content-wrapper">
+    <div class="form-card">
 
-    <form asp-action="EditEvent" method="post" enctype="multipart/form-data" class="needs-validation mt-3" novalidate>
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-        <div class="mb-3">
-            <label asp-for="Title" class="form-label"></label>
-            <input asp-for="Title" class="form-control" placeholder="Event Title" />
-            <span asp-validation-for="Title" class="text-danger"></span>
+        <div class="page-header">
+            <h2>@ViewData["Title"]</h2>
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
+                Back to Events
+            </a>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Description" class="form-label"></label>
-            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the event"></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+        <hr />
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
+        <form id="editEventForm"
+              asp-action="EditEvent"
+              asp-route-id="@ViewContext.RouteData.Values["id"]"
+              method="post"
+              enctype="multipart/form-data">
+
+            <div class="validation-summary">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" placeholder="Event Title" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the event"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
                 <label asp-for="Date" class="form-label"></label>
-                <input asp-for="Date" type="datetime-local" class="form-control"
+                <input asp-for="Date"
+                       type="datetime-local"
+                       class="form-control"
                        value="@Model.Date.ToString("yyyy-MM-ddTHH:mm")" />
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
-            <div class="col-md-6 mb-3">
+
+            <div class="form-group">
                 <label asp-for="Location" class="form-label"></label>
                 <input asp-for="Location" class="form-control" placeholder="Building, room, or online link" />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-6 mb3">
-                <label asp-for="MaxParticipants" class="form-label">Max Participants</label>
-                <input asp-for="MaxParticipants" class="form-control" type="number" min="1" />
+            <div class="form-group">
+                <label asp-for="MaxParticipants" class="form-label"></label>
+                <input asp-for="MaxParticipants" type="number" min="1" class="form-control" />
                 <span asp-validation-for="MaxParticipants" class="text-danger"></span>
             </div>
-            <div class="col-md-6 mb-3">
+
+            <div class="form-group">
                 @if (!string.IsNullOrEmpty(Model.ImagePath))
                 {
-                    <label class="form-label">Current Image:</label>
-                    <div>
-                        <img src="~/@Model.ImagePath" alt="Current Event Image"
-                             style="max-width:250px;max-height:160px; border-radius:8px;" />
+                    <div class="mb-2">
+                        <label class="form-label">Current Image</label><br />
+                        <img src="~/@Model.ImagePath" style="max-width:220px; border-radius:8px;" />
                     </div>
                 }
-                <label asp-for="Image" class="form-label mt-2">Upload New Image (optional)</label>
-                <input asp-for="Image" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif" required="false" />
+
+                <label asp-for="Image" class="form-label">Upload New Image (optional)</label>
+                <input asp-for="Image"
+                       type="file"
+                       class="form-control"
+                       accept=".jpg,.jpeg,.png,.gif" />
                 <span asp-validation-for="Image" class="text-danger"></span>
-                <div class="form-text">Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB. Leave empty to keep the current image.</div>
+                <small class="form-text text-muted">
+                    Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB.
+                </small>
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-info text-white px-4">Update Event</button>
-    </form>
+            <div class="btn-group-actions">
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    Update
+                </button>
 
-    @if (Model.RegisteredUsers != null && Model.RegisteredUsers.Any())
-    {
-        <div class="mt-5">
-            <h4>Registered Users</h4>
-            <table class="table table-bordered table-hover mt-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>User Name</th>
-                        <th>Email</th>
-                        <th>Registered At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
-                    {
-                        var user = Model.RegisteredUsers[i];
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+        @if (Model.RegisteredUsers?.Any() == true)
+        {
+            <div class="mt-5">
+                <h4>Registered Users</h4>
+                <table class="table table-bordered table-hover mt-3">
+                    <thead class="table-light">
                         <tr>
-                            <td>@(i + 1)</td>
-                            <td>@user.UserName</td>
-                            <td>@user.Email</td>
-                            <td>@user.RegisteredAt.ToString("dd-MM-yyyy HH:mm")</td>
+                            <th>#</th>
+                            <th>User Name</th>
+                            <th>Email</th>
+                            <th>Registered At</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
+                        {
+                            var user = Model.RegisteredUsers[i];
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>@user.UserName</td>
+                                <td>@user.Email</td>
+                                <td>@user.RegisteredAt.ToString("dd-MM-yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var input = document.querySelector('input[name="Image"]');
-            if (input) {
-                input.removeAttribute('required');
-                input.removeAttribute('data-val-required');
-            }
-            var errorSpan = document.getElementById('Image-error');
-            if (errorSpan && errorSpan.innerText === "The Image field is required.") {
-                errorSpan.innerText = "";
-            }
-        });
+        document.getElementById("editEventForm")
+            .addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const form = this;
+                const btn = document.getElementById("submitBtn");
+
+                if (!$(form).valid()) return;
+
+                btn.disabled = true;
+                btn.innerText = "Updating...";
+
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        window.location.href = "/Admin/Index";
+                    } else {
+                        const error = await response.json();
+                        alert(error.message || "Update failed.");
+                        btn.disabled = false;
+                        btn.innerText = "Update";
+                    }
+                } catch (err) {
+                    alert("Unexpected error occurred.");
+                    btn.disabled = false;
+                    btn.innerText = "Update";
+                }
+            });
     </script>
 }
