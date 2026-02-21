@@ -1,57 +1,120 @@
-﻿@using University_Portal.ViewModels;
-@model RegisterViewModel;
-
+﻿@using University_Portal.ViewModels
+@model RegisterViewModel
 
 @{
-    ViewData["Title"] = "RegisterForEvent";
+    ViewData["Title"] = "Rejestracja";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="account-container">
     <div class="account-box">
-        <h2 class="text-center mb-4">Register</h2>
-        <form asp-action="Register" method="post">
+        <h2 class="text-center mb-4">Rejestracja</h2>
+
+        <form id="registerForm" asp-action="Register" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
             <div class="mb-3">
-                <label asp-for="Name" class="form-label"></label>
+                <label asp-for="Name" class="form-label">Imię i nazwisko</label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
+                <label asp-for="Email" class="form-label">Adres e-mail</label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
+                <label asp-for="Password" class="form-label">Hasło</label>
                 <input asp-for="Password" class="form-control" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <label asp-for="ConfirmPassword" class="form-label">Potwierdź hasło</label>
                 <input asp-for="ConfirmPassword" class="form-control" />
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
             </div>
 
-
-            <input type="submit" value="Register" class="btn btn-success w-100" />
+            <input type="submit" value="Zarejestruj" class="btn btn-success w-100" />
 
             <p class="text-center mt-2">
-                Already have an account? <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Login</a>
+                Masz już konto? <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Zaloguj się</a>
             </p>
 
             <div class="text-center">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Powrót</a>
             </div>
         </form>
+
+        <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1055;"></div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        $(function () {
+            function csrf() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            window.showToast = function (success, message) {
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+
+                const toastHtml = `
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
+                                 role="alert" style="cursor:pointer;">
+                                <div class="toast-header ${typeClass} text-white border-0">
+                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                    <button type="button" class="btn-close btn-close-white"></button>
+                                </div>
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                            </div>
+                        `;
+                $("#toastContainer").append(toastHtml);
+
+                const toast = $("#" + toastId);
+                toast.on("click", function () {
+                    toast.fadeOut(300, () => toast.remove());
+                });
+
+                setTimeout(() => {
+                    toast.fadeOut(300, () => toast.remove());
+                }, 10000);
+            };
+
+            $("#registerForm").submit(function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const btn = form.find("input[type=submit]");
+                btn.prop("disabled", true);
+
+                $.ajax({
+                    type: "POST",
+                    url: form.attr("action"),
+                    data: form.serialize(),
+                    success: function (res) {
+                        if (res.success) {
+                            showToast(true, res.message); 
+                            form[0].reset();
+                        } else if (res.errors) {
+                            showToast(false, res.errors.join("<br>"));
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Wystąpił nieoczekiwany błąd.");
+                    },
+                    complete: function () {
+                        btn.prop("disabled", false);
+                    }
+                });
+            });
+        });
+    </script>
 }
