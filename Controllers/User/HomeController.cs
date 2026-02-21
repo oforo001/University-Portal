@@ -52,38 +52,41 @@ namespace University_Portal.Controllers.User
             return View(events);
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> RegisterForEvent(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            if (!User.Identity.IsAuthenticated)
             {
-                TempData["Error"] = "Nie można zidentyfikować użytkownika.";
-                RedirectToAction(nameof(Index));
+                return Json(new
+                {
+                    success = false,
+                    message = "Aby zarejestrować się na wydarzenie, musisz być zalogowany."
+                });
             }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var registerUserToEvent = await EventClient.RegisterAsync(_context, id, userId);
 
-            TempData[registerUserToEvent.Success ? "Success" : "Error"] = registerUserToEvent.Message;
-            return RedirectToAction(nameof(Index));
+            return Json(new { success = registerUserToEvent.Success, message = registerUserToEvent.Message });
         }
 
-        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Cancel(int id) 
+        public async Task<IActionResult> Cancel(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            if (!User.Identity.IsAuthenticated)
             {
-                TempData["Error"] = "Nie można zidentyfikować użytkownika.";
-                RedirectToAction(nameof(Index));
+                return Json(new
+                {
+                    success = false,
+                    message = "Aby anulować rejestrację, musisz być zalogowany."
+                });
             }
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userCancelFromEvent = await EventClient.CancelAsync(_context, id, userId);
 
-            TempData[userCancelFromEvent.Success ? "Success" : "Error"] = userCancelFromEvent.Message;
-            return RedirectToAction(nameof(Index));
+            return Json(new { success = userCancelFromEvent.Success, message = userCancelFromEvent.Message });
         }
 
         public IActionResult Privacy()
