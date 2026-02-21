@@ -1,20 +1,13 @@
 ﻿@model IEnumerable<University_Portal.ViewModels.Home.EventViewModel>
 @{
-    ViewData["Title"] = "Upcoming Events";
+    ViewData["Title"] = "Nadchodzące wydarzenia";
     var registeredEventIds = ViewBag.RegisteredEventIds as List<int> ?? new List<int>();
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Upcoming Events</h2>
+    <h2 class="text-center mb-4">Nadchodzące wydarzenia</h2>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success text-center">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger text-center">@TempData["Error"]</div>
-    }
+    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1055;"></div>
 
     @if (Model.Any())
     {
@@ -32,7 +25,7 @@
                                         <span style="display:inline-block;width:20px;height:20px;background-color:#28a745;border-radius:50%;border:2px solid #fff;box-shadow:0 0 5px #888;"></span>
                                     </span>
                                 }
-                                <img src="~/@ev.ImagePath" alt="Event Image"
+                                <img src="~/@ev.ImagePath" alt="Obraz wydarzenia"
                                      class="card-img-top"
                                      style="height: 300px; object-fit: cover; border-radius: 0.6rem 0.6rem 0 0;"
                                      onerror="this.onerror=null;this.src='/images/no-image.png';" />
@@ -49,7 +42,7 @@
                                 }
                                 <div class="bg-light d-flex align-items-center justify-content-center"
                                      style="height: 300px; border-radius: 0.6rem 0.6rem 0 0;">
-                                    <span class="text-muted" style="font-size:1.3em;">No Image</span>
+                                    <span class="text-muted" style="font-size:1.3em;">Brak obrazu</span>
                                 </div>
                             </div>
                         }
@@ -60,30 +53,30 @@
                                 @ev.Description
                             </div>
                             <p class="card-text mb-2 mt-auto">
-                                <strong>Date:</strong> @ev.Date.ToString("dd-MM-yyyy HH:mm")<br />
-                                <strong>Location:</strong> @ev.Location<br />
-                                <strong>Free slots:</strong>
+                                <strong>Data:</strong> @ev.Date.ToString("dd-MM-yyyy HH:mm")<br />
+                                <strong>Lokalizacja:</strong> @ev.Location<br />
+                                <strong>Dostępne miejsca:</strong>
                                 @if (ev.FreeSlots > 0)
                                 {
                                     <span class="text-success fw-bold">@ev.FreeSlots</span>
                                 }
                                 else
                                 {
-                                    <span class="text-danger fw-bold">No slots left</span>
+                                    <span class="text-danger fw-bold">Brak wolnych miejsc</span>
                                 }
                             </p>
 
                             @if (registeredEventIds.Contains(ev.Id))
                             {
-                                <form asp-controller="Home" asp-action="Cancel" asp-route-id="@ev.Id" method="post">
-                                    <button type="submit" class="btn btn-danger mt-2 w-100">Cancel Registration</button>
+                                <form class="cancelForm" data-id="@ev.Id">
+                                    <button type="submit" class="btn btn-danger mt-2 w-100">Anuluj rejestrację</button>
                                 </form>
                             }
                             else
                             {
-                                <form asp-controller="Home" asp-action="RegisterForEvent" asp-route-id="@ev.Id" method="post">
+                                <form class="registerForm" data-id="@ev.Id">
                                     <button type="submit" class="btn btn-info text-white mt-3 w-100" @(ev.FreeSlots <= 0 ? "disabled" : "")>
-                                        Register
+                                        Zarejestruj się
                                     </button>
                                 </form>
                             }
@@ -95,6 +88,102 @@
     }
     else
     {
-        <div class="alert alert-info text-center">No events available.</div>
+        <div class="alert alert-info text-center">Brak dostępnych wydarzeń.</div>
     }
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        $(function () {
+
+            function csrf() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            window.showToast = function (success, message) {
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+
+                const toastHtml = `
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
+                                 role="alert" style="cursor:pointer;">
+                                <div class="toast-header ${typeClass} text-white border-0">
+                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                    <button type="button" class="btn-close btn-close-white"></button>
+                                </div>
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                            </div>
+                        `;
+                $("#toastContainer").append(toastHtml);
+
+                const toast = $("#" + toastId);
+                toast.on("click", function () { toast.fadeOut(300, () => toast.remove()); });
+
+                setTimeout(() => { toast.fadeOut(300, () => toast.remove()); }, 10000);
+            };
+
+            $(".registerForm").submit(function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const id = form.data("id");
+                const btn = form.find("button");
+                btn.prop("disabled", true);
+
+                $.ajax({
+                    type: "POST",
+                    url: `/Home/RegisterForEvent?id=${id}`,
+                    headers: { 'RequestVerificationToken': csrf() },
+                    success: function (res) {
+                        showToast(res.success, res.message);
+                        if (res.success) {
+                            form.replaceWith(`
+                                        <form class="cancelForm" data-id="${id}">
+                                            <button type="submit" class="btn btn-danger mt-2 w-100">Anuluj rejestrację</button>
+                                        </form>
+                                    `);
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Wystąpił nieoczekiwany błąd.");
+                    },
+                    complete: function () { btn.prop("disabled", false); }
+                });
+            });
+
+            $(document).on("submit", ".cancelForm", function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const id = form.data("id");
+                const btn = form.find("button");
+                btn.prop("disabled", true);
+
+                $.ajax({
+                    type: "POST",
+                    url: `/Home/Cancel?id=${id}`,
+                    headers: { 'RequestVerificationToken': csrf() },
+                    success: function (res) {
+                        showToast(res.success, res.message);
+                        if (res.success) {
+                            form.replaceWith(`
+                                        <form class="registerForm" data-id="${id}">
+                                            <button type="submit" class="btn btn-info text-white mt-3 w-100">
+                                                Zarejestruj się
+                                            </button>
+                                        </form>
+                                    `);
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Wystąpił nieoczekiwany błąd.");
+                    },
+                    complete: function () { btn.prop("disabled", false); }
+                });
+            });
+
+        });
+    </script>
+}
