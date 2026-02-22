@@ -66,8 +66,7 @@
                 const typeClass = success ? "bg-success" : "bg-danger";
 
                 const toastHtml = `
-                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
-                                 role="alert" style="cursor:pointer;">
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
                                 <div class="toast-header ${typeClass} text-white border-0">
                                     <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
                                     <button type="button" class="btn-close btn-close-white"></button>
@@ -101,8 +100,14 @@
                     data: form.serialize(),
                     success: function (res) {
                         if (res.success) {
-                            showToast(true, res.message); 
-                            form[0].reset();
+                            showToast(true, res.message);
+                            if (res.redirectUrl) {
+                                setTimeout(() => {
+                                    window.location.href = res.redirectUrl;
+                                }, 1500);
+                            } else {
+                                form[0].reset();
+                            }
                         } else if (res.errors) {
                             showToast(false, res.errors.join("<br>"));
                         }
