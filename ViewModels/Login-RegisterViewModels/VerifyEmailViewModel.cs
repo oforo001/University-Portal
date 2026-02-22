@@ -4,8 +4,11 @@ namespace University_Portal.ViewModels
 {
     public class VerifyEmailViewModel
     {
-        [Required(ErrorMessage = "Email is requered.")]
-        [EmailAddress]
-        public string Email { get; set; }
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        [Display(Name = "Verification Code")]
+        public string Token { get; set; }
+
+        public string Email { get; set; } 
     }
 }

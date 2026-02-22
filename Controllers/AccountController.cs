@@ -99,7 +99,7 @@ namespace University_Portal.Controllers
                 FullName = model.Name,
                 Email = model.Email,
                 UserName = model.Email,
-                IsActive = true,
+                IsActive = false,
                 CreatedAt = DateTime.Now
             };
 
@@ -111,29 +111,11 @@ namespace University_Portal.Controllers
 
                 try
                 {
-                    await emailService.SendEmailAsync(new EmailDto
-                    {
-                        To = user.Email,
-                        Subject = "Witamy w University Portal!",
-                        Body = @"
-                            <html>
-                            <body style='font-family: Arial, sans-serif; color: #333;'>
-                              <div style='max-width: 600px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 10px;'>
-                                  <h2 style='color: #2c3e50;'>Witamy w University Portal!</h2>
-                                  <p>Dziękujemy za rejestrację. Twój dostęp do portalu został utworzony.</p>
-                                  <p>
-                                      <a href='https://your-portal.com/login'
-                                          style='display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;'>
-                                             Zaloguj się teraz
-                                     </a>
-                                </p>
-                                 <p style='font-size: 0.85em; color: #777;'>
-                                    Jeżeli nie rejestrowałeś się na portalu, skontaktuj się z administratorem.
-                                 </p>
-                            </div>
-                          </body>
-                          </html>"
-                    });
+                    string token = await emailService.SendEmailVerificationAsync(user.Email);
+
+                    user.EmailVerificationToken = token;
+                    user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+                    await userManager.UpdateAsync(user);
                 }
                 catch (Exception ex)
                 {
@@ -143,10 +125,12 @@ namespace University_Portal.Controllers
                         errors = new List<string> { "Wysyłka e-maila nie powiodła się: " + ex.Message }
                     });
                 }
+
                 return Json(new
                 {
                     success = true,
-                    message = "Rejestracja zakończona sukcesem! Możesz się teraz zalogować."
+                    message = "Rejestracja zakończona sukcesem! Sprawdź swoją pocztę i wprowadź kod weryfikacyjny.",
+                    redirectUrl = Url.Action("VerifyEmail", "Account", new { email = user.Email })
                 });
             }
             else
@@ -155,28 +139,50 @@ namespace University_Portal.Controllers
                 return Json(new { success = false, errors });
             }
         }
-        public IActionResult VerifyEmail()
+        public IActionResult VerifyEmail(string email)
         {
-            return View();
+            var model = new VerifyEmailViewModel
+            {
+                Email = email
+            };
+            return View(model);
         }
         [HttpPost]
         public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var user = await userManager.FindByNameAsync(model.Email);
-                if (user == null)
-                {
-                    ModelState.AddModelError(string.Empty, "Something went wrong");
-                    return View(model);
-                }
-                else
-                {
-                    return RedirectToAction("ChangePassword", "Account",
-                        new { username = user.UserName });
-                }
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+                return Json(new { success = false, errors });
             }
-            return View(model);
+
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return Json(new { success = false, errors = new List<string> { "Nie znaleziono użytkownika." } });
+            }
+
+            if (user.EmailVerificationToken != model.Token ||
+                user.EmailVerificationTokenExpiry == null ||
+                user.EmailVerificationTokenExpiry < DateTime.UtcNow)
+            {
+                return Json(new { success = false, errors = new List<string> { "Nieprawidłowy lub wygasły kod weryfikacyjny." } });
+            }
+
+            user.EmailVerificationToken = null;
+            user.EmailVerificationTokenExpiry = null;
+            user.IsActive = true;
+            await userManager.UpdateAsync(user);
+
+            return Json(new
+            {
+                success = true,
+                message = "Email zweryfikowany! Możesz teraz zalogować się do systemu.",
+                redirectUrl = Url.Action("Login", "Account")
+            });
         }
 
         public IActionResult ChangePassword(string username)

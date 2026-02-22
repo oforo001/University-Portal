@@ -18,5 +18,7 @@ namespace University_Portal.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? LastUpdatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? EmailVerificationTokenExpiry { get; set; }
     }
 }
