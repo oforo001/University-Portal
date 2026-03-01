@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using University_Portal.AppServices.E_mail;
 using University_Portal.Models;
 using University_Portal.ViewModels.AdminViewModels;
 
@@ -10,15 +11,15 @@ namespace University_Portal.Controllers.Admin
     [Authorize(Roles = "Admin")]
     public class UserManagementController : Controller
     {
+        private readonly EmailService _emailService;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserManagementController(
-            UserManager<AppUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+        public UserManagementController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, EmailService emailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index()
@@ -84,7 +85,16 @@ namespace University_Portal.Controllers.Admin
 
             await _userManager.AddToRoleAsync(user, model.Role);
 
-            return Ok(new { message = "Użytkownik został utworzony." });
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(user.Email, user.FullName, model.Password, model.Role);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send welcome email: {ex.Message}");
+            }
+
+            return Ok(new { message = "Użytkownik został utworzony i powitalny email został wysłany." });
         }
 
 
