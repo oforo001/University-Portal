@@ -39,11 +39,12 @@ namespace University_Portal.Controllers
 
             return View(posts);
         }
+
         [HttpGet]
         [Authorize]
         public IActionResult Details(int id)
         {
-            if(id == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -58,7 +59,7 @@ namespace University_Portal.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View(new PostViewModel
@@ -79,27 +80,25 @@ namespace University_Portal.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ReloadCategories(postViewModel);
-                return View(postViewModel);
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                                              .Select(e => e.ErrorMessage)
+                                              .ToList();
+                return Json(new { error = string.Join("<br>", errors) });
             }
+
             postViewModel.Post.Id = 0;
 
             if (postViewModel.FeatureImage != null && postViewModel.FeatureImage.Length > 0)
             {
                 if (postViewModel.FeatureImage.Length > MaxFileSize)
                 {
-                    ModelState.AddModelError("", "Image size must be less than 4MB.");
-                    ReloadCategories(postViewModel);
-                    return View(postViewModel);
+                    return Json(new { error = "Rozmiar obrazu musi być mniejszy niż 4MB." });
                 }
 
                 var ext = Path.GetExtension(postViewModel.FeatureImage.FileName).ToLowerInvariant();
-
                 if (!_allowedExtensions.Contains(ext))
                 {
-                    ModelState.AddModelError("", "Allowed formats: .jpg, .jpeg, .png");
-                    ReloadCategories(postViewModel);
-                    return View(postViewModel);
+                    return Json(new { error = "Dozwolone formaty: .jpg, .jpeg, .png" });
                 }
 
                 postViewModel.Post.FeatureImagePath =
@@ -109,20 +108,25 @@ namespace University_Portal.Controllers
             await _context.Posts.AddAsync(postViewModel.Post);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
-        }
 
+            return Json(new
+            {
+                success = true,
+                message = "Post został dodany.",
+                redirectUrl = Url.Action("Index", "Post")
+            });
+        }
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
-            if(id == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
             var postFromDB = await _context.Posts.FirstOrDefaultAsync(post => post.Id == id);
-            if (postFromDB == null) 
+            if (postFromDB == null)
             {
                 return NotFound();
             }
@@ -146,27 +150,28 @@ namespace University_Portal.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(editPostViewModel);
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                                              .Select(e => e.ErrorMessage)
+                                              .ToList();
+                return Json(new { error = string.Join("<br>", errors) });
             }
 
-            var postFromDB = await _context.Posts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == editPostViewModel.Post.Id);
+            var postFromDB = await _context.Posts.AsNoTracking()
+                                                 .FirstOrDefaultAsync(p => p.Id == editPostViewModel.Post.Id);
 
-            if(editPostViewModel.FeatureImage != null)
+            if (editPostViewModel.FeatureImage != null)
             {
-                var inputFileExtension = Path.GetExtension(editPostViewModel.FeatureImage.FileName).ToLower();
-                bool isAllowed = _allowedExtensions.Contains(inputFileExtension);
-
-                if (!isAllowed)
+                var ext = Path.GetExtension(editPostViewModel.FeatureImage.FileName).ToLower();
+                if (!_allowedExtensions.Contains(ext))
                 {
-                    ModelState.AddModelError("", "Invalid image format. Allowed formats: .jpg, jpeg, png");
-                    return View(editPostViewModel);
+                    return Json(new { error = "Nieprawidłowy format obrazu. Dozwolone formaty: .jpg, .jpeg, .png" });
                 }
-                var existingFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", Path.GetFileName(postFromDB.FeatureImagePath));
+
+                var existingFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads",
+                                                    Path.GetFileName(postFromDB.FeatureImagePath));
 
                 if (System.IO.File.Exists(existingFilePath))
-                {
                     System.IO.File.Delete(existingFilePath);
-                }
 
                 editPostViewModel.Post.FeatureImagePath = await UploadFileToFolder(editPostViewModel.FeatureImage);
             }
@@ -174,16 +179,30 @@ namespace University_Portal.Controllers
             {
                 editPostViewModel.Post.FeatureImagePath = postFromDB.FeatureImagePath;
             }
+
             _context.Posts.Update(editPostViewModel.Post);
             await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
 
+            return Json(new { success = true, message = "Post został zaktualizowany." });
         }
+
         [HttpPost]
         [Authorize]
-        [ValidateAntiForgeryToken] // to prevent CSRF attacks
+        [ValidateAntiForgeryToken]
         public async Task<JsonResult> AddComment([FromBody] Comment comment)
         {
+            if (string.IsNullOrWhiteSpace(comment.Content))
+                return Json(new { error = "Komentarz nie może być pusty." });
+
+            var postExists = await _context.Posts.AnyAsync(p => p.Id == comment.PostId);
+
+            if (!postExists)
+                return Json(new { error = "Nieprawidłowy post." });
+
+            comment.Id = 0;
+
+            comment.UserName = User.Identity?.Name ?? "Nieznany";
+
             comment.CommentDate = DateTime.UtcNow;
 
             await _context.Comments.AddAsync(comment);
@@ -191,26 +210,49 @@ namespace University_Portal.Controllers
 
             return Json(new
             {
+                id = comment.Id,
                 username = comment.UserName,
-                commentDate = comment.CommentDate.ToString("MMMM dd, yyyy"),
+                commentDate = comment.CommentDate.ToString("MMM dd, yyyy HH:mm"),
                 content = comment.Content
             });
         }
 
-      
         [HttpPost]
-        [Authorize(Roles ="Admin")]
-        [ValidateAntiForgeryToken] // tp prevent CSRF attacks
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteComment(int id)
+        {
+            if (!User.IsInRole("Admin"))
+                return Forbid("Musisz być administratorem, aby usunąć komentarz.");
+
+            var comment = await _context.Comments.FindAsync(id);
+
+            if (comment == null)
+                return NotFound(new { error = "Nie znaleziono komentarza." });
+
+            _context.Comments.Remove(comment);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Komentarz został usunięty." });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!User.IsInRole("Admin"))
+                return Forbid("Musisz być administratorem, aby usunąć post.");
+
             var post = await _context.Posts.FindAsync(id);
             if (post == null) return NotFound();
 
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(new { message = "Post został usunięty." });
         }
+
         private void ReloadCategories(PostViewModel model)
         {
             model.Categories = _context.Categories
@@ -242,6 +284,5 @@ namespace University_Portal.Controllers
 
             return $"/uploads/posts/{fileName}";
         }
-
     }
 }

@@ -14,7 +14,7 @@
         <a asp-controller="Post"
            asp-action="Index"
            class="back-button">
-            ← Back to list
+            ← Powrót do listy
         </a>
 
         <div class="post-image-wrapper">
@@ -27,7 +27,7 @@
             <h1 class="post-title">@Model.Title</h1>
 
             <div class="post-meta">
-                <span>By @Model.Author</span>
+                <span>Autor: @Model.Author</span>
                 <span>@Model.PublishDate.ToString("MMMM dd, yyyy")</span>
                 <span>@Model.Category?.Name</span>
             </div>
@@ -46,18 +46,18 @@
                    asp-action="Edit"
                    asp-route-id="@Model.Id"
                    class="btn btn-outline-secondary">
-                    Edit
+                    Edytuj
                 </a>
 
                 <button id="openDeleteModal"
                         class="btn btn-outline-danger">
-                    Delete
+                    Usuń
                 </button>
             </div>
         }
 
         <div class="comments-section">
-            <div class="comments-title">Comments</div>
+            <div class="comments-title">Komentarze</div>
 
             <div id="commentsContainer">
                 @if (Model.Comments.Any())
@@ -66,23 +66,31 @@
                     {
                         <div class="comment">
                             <div class="comment-header">
-                                <div class="comment-author">@comment.UserName</div>
-                                <div class="comment-date">
-                                    @comment.CommentDate.ToString("MMM dd, yyyy")
+                                <div class="comment-author-date">
+                                    <span class="comment-author">@comment.UserName</span>
+                                    <span class="comment-date">@comment.CommentDate.ToString("MMM dd, yyyy HH:mm")</span>
                                 </div>
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <button class="delete-comment-btn" title="Usuń komentarz" data-comment-id="@comment.Id">×</button>
+                                }
                             </div>
-                            <div class="comment-content">
-                                @comment.Content
-                            </div>
+                            <div class="comment-content">@comment.Content</div>
                         </div>
                     }
                 }
                 else
                 {
                     <p class="no-comments" id="noCommentsText">
-                        No comments yet. Be the first to comment.
+                        Brak komentarzy. Bądź pierwszy, który skomentuje.
                     </p>
                 }
+            </div>
+            <div class="comments-pagination">
+                <button id="prevPage" disabled>← Poprzednia</button>
+                <span id="pageInfo">Strona 1</span>
+                <button id="nextPage">Następna →</button>
             </div>
 
             <hr />
@@ -92,32 +100,25 @@
                 <div class="add-comment-header">
                     <div class="avatar">💬</div>
                     <div>
-                        <h4>Add a comment</h4>
-                        <p>Join the discussion</p>
+                        <h4>Dodaj komentarz</h4>
+                        <p>Dołącz do dyskusji</p>
                     </div>
                 </div>
 
                 <form id="commentForm" class="add-comment-form">
 
                     <div class="input-group">
-                        <input id="UserName"
-                               name="UserName"
-                               placeholder="Your name"
-                               required />
-                    </div>
-
-                    <div class="input-group">
                         <textarea id="Content"
                                   name="Content"
                                   rows="3"
-                                  placeholder="Write something thoughtful..."
+                                  placeholder="Napisz coś wartościowego..."
                                   required></textarea>
                     </div>
 
                     <div class="submit-row">
-                        <span class="hint">Be respectful & constructive</span>
+                        <span class="hint">Bądź uprzejmy i konstruktywny</span>
                         <button type="submit" class="submit-btn">
-                            Post Comment →
+                            Dodaj komentarz →
                         </button>
                     </div>
 
@@ -125,102 +126,258 @@
             </div>
         </div>
     </div>
+    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1055;"></div>
 </div>
 
 <div id="deleteOverlay" class="delete-overlay">
     <div class="delete-modal">
-        <h4>Delete Post?</h4>
-        <p>This action cannot be undone.</p>
+        <h4>Usuń post?</h4>
+        <p>Ta akcja jest nieodwracalna.</p>
 
         <div class="delete-actions">
             <button id="cancelDelete" class="btn btn-secondary">
-                Cancel
+                Anuluj
             </button>
 
             <button id="confirmDelete" class="btn btn-danger">
-                Delete
+                Usuń
             </button>
         </div>
     </div>
 </div>
 
+<div id="deleteCommentOverlay" class="delete-overlay">
+    <div class="delete-modal">
+        <h4>Usuń komentarz?</h4>
+        <p>Ta akcja jest nieodwracalna.</p>
+        <div class="delete-actions">
+            <button id="cancelDeleteComment" class="btn btn-secondary">Anuluj</button>
+            <button id="confirmDeleteComment" class="btn btn-danger">Usuń</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-<script>
-    $(document).ready(function () {
+    <script>
+        window.showToast = function (success, message) {
+            const toastId = "toast_" + Date.now();
+            const typeClass = success ? "bg-success" : "bg-danger";
 
-        function getCsrfToken() {
-            return $('input[name="__RequestVerificationToken"]').val();
-        }
-
-        /* ================= COMMENTS ================= */
-        $("#commentForm").on("submit", function (e) {
-            e.preventDefault();
-
-            const userName = $("#UserName").val().trim();
-            const content = $("#Content").val().trim();
-            const postId = @Model.Id;
-
-            if (!userName || !content) return;
-
-            $.ajax({
-                url: "@Url.Action("AddComment", "Post")",
-                type: "POST",
-                contentType: "application/json",
-                headers: {
-                    'RequestVerificationToken': getCsrfToken()
-                },
-                data: JSON.stringify({ userName, content, postId }),
-                success: function (response) {
-
-                    $("#noCommentsText").remove();
-
-                    const commentHtml = `
-                        <div class="comment">
-                            <div class="comment-header">
-                                <div class="comment-author">${response.username}</div>
-                                <div class="comment-date">${response.commentDate}</div>
+            const toastHtml = `
+                        <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                            <div class="toast-header ${typeClass} text-white border-0">
+                                <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                <button type="button" class="btn-close btn-close-white"></button>
                             </div>
-                            <div class="comment-content">${response.content}</div>
+                            <div class="toast-body">
+                                ${message}
+                            </div>
                         </div>
                     `;
 
-                    $("#commentsContainer").prepend(commentHtml);
-                    $("#commentForm")[0].reset();
-                },
-                error: function () {
-                    alert("Failed to add comment.");
+            $("#toastContainer").append(toastHtml);
+
+            const toast = $("#" + toastId);
+            toast.on("click", function () {
+                toast.fadeOut(300, () => toast.remove());
+            });
+
+            setTimeout(() => {
+                toast.fadeOut(300, () => toast.remove());
+            }, 10000);
+        };
+
+        $(document).ready(function () {
+            function getCsrfToken() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            $("#commentForm").on("submit", function (e) {
+                e.preventDefault();
+                const content = $("#Content").val().trim();
+                const postId = @Model.Id;
+                if (!content) return;
+
+                $.ajax({
+                    url: "@Url.Action("AddComment", "Post")",
+                    type: "POST",
+                    contentType: "application/json",
+                    headers: { 'RequestVerificationToken': getCsrfToken() },
+                    data: JSON.stringify({ Content: content, PostId: postId }),
+                    success: function (response) {
+                        if (response.error) {
+                            showToast(false, response.error);
+                            return;
+                        }
+
+                        $("#noCommentsText").remove();
+                        const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
+                        const deleteButtonHtml = isAdmin ? `<button class="delete-comment-btn" title="Usuń komentarz" data-comment-id="${response.id}">×</button>` : "";
+
+                        const commentHtml = `
+                                    <div class="comment">
+                                        <div class="comment-header">
+                                            <div class="comment-author-date">
+                                                <span class="comment-author">${response.username}</span>
+                                                <span class="comment-date">${response.commentDate}</span>
+                                            </div>
+                                            ${deleteButtonHtml}
+                                        </div>
+                                        <div class="comment-content">${response.content}</div>
+                                    </div>
+                                `;
+
+                        $("#commentsContainer").prepend(commentHtml);
+                        $("#commentForm")[0].reset();
+                        showToast(true, "Komentarz został dodany.");
+
+                        if (isAdmin) {
+                            $(`button[data-comment-id='${response.id}']`).click(function () {
+                                const commentToDeleteId = $(this).data("comment-id");
+                                $("#deleteCommentOverlay").addClass("active");
+                                $("#pageWrapper").addClass("blurred");
+
+                                $("#confirmDeleteComment").off("click").on("click", function () {
+                                    $.ajax({
+                                        url: "@Url.Action("DeleteComment", "Post")",
+                                        type: "POST",
+                                        headers: { 'RequestVerificationToken': getCsrfToken() },
+                                        data: { id: commentToDeleteId },
+                                        success: function () {
+                                            $(`button[data-comment-id='${commentToDeleteId}']`).closest(".comment").remove();
+                                            $("#deleteCommentOverlay").removeClass("active");
+                                            $("#pageWrapper").removeClass("blurred");
+                                            showToast(true, "Komentarz został usunięty.");
+
+                                            if ($("#commentsContainer .comment").length === 0) {
+                                                $("#commentsContainer").append('<p class="no-comments" id="noCommentsText">Brak komentarzy. Bądź pierwszy, który skomentuje.</p>');
+                                            }
+                                        },
+                                        error: function () { showToast(false, "Usuwanie komentarza nie powiodło się."); }
+                                    });
+                                });
+
+                                $("#cancelDeleteComment").off("click").on("click", function () {
+                                    $("#deleteCommentOverlay").removeClass("active");
+                                    $("#pageWrapper").removeClass("blurred");
+                                });
+                            });
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Nie udało się dodać komentarza.");
+                    }
+                });
+            });
+
+            $("#openDeleteModal").click(function () {
+                $("#deleteOverlay").addClass("active");
+                $("#pageWrapper").addClass("blurred");
+            });
+
+            $("#cancelDelete").click(function () {
+                $("#deleteOverlay").removeClass("active");
+                $("#pageWrapper").removeClass("blurred");
+            });
+
+            $("#confirmDelete").click(function () {
+                $.ajax({
+                    url: "@Url.Action("Delete", "Post")",
+                    type: "POST",
+                    headers: { 'RequestVerificationToken': getCsrfToken() },
+                    data: { id: @Model.Id },
+                    success: function () {
+                        showToast(true, "Post został usunięty.");
+                        setTimeout(() => window.location.href = "@Url.Action("Index", "Post")", 1500);
+                    },
+                    error: function () {
+                        showToast(false, "Usuwanie postu nie powiodło się.");
+                    }
+                });
+            });
+
+            let commentToDeleteId = null;
+            $(".delete-comment-btn").click(function () {
+                commentToDeleteId = $(this).data("comment-id");
+                $("#deleteCommentOverlay").addClass("active");
+                $("#pageWrapper").addClass("blurred");
+            });
+
+            $("#cancelDeleteComment").click(function () {
+                commentToDeleteId = null;
+                $("#deleteCommentOverlay").removeClass("active");
+                $("#pageWrapper").removeClass("blurred");
+            });
+
+            $("#confirmDeleteComment").click(function () {
+                if (!commentToDeleteId) return;
+                $.ajax({
+                    url: "@Url.Action("DeleteComment", "Post")",
+                    type: "POST",
+                    headers: { 'RequestVerificationToken': getCsrfToken() },
+                    data: { id: commentToDeleteId },
+                    success: function () {
+                        $(`button[data-comment-id='${commentToDeleteId}']`).closest(".comment").remove();
+                        $("#deleteCommentOverlay").removeClass("active");
+                        $("#pageWrapper").removeClass("blurred");
+                        showToast(true, "Komentarz został usunięty.");
+
+                        if ($("#commentsContainer .comment").length === 0) {
+                            $("#commentsContainer").append('<p class="no-comments" id="noCommentsText">Brak komentarzy. Bądź pierwszy, który skomentuje.</p>');
+                        }
+                    },
+                    error: function () { showToast(false, "Usuwanie komentarza nie powiodło się."); }
+                });
+            });
+
+            const commentsPerPage = 10;
+            let currentPage = 1;
+
+            function showPage(page) {
+                const comments = $("#commentsContainer .comment");
+                const totalPages = Math.ceil(comments.length / commentsPerPage);
+
+                if (comments.length === 0) {
+                    $(".comments-pagination").hide();
+                    return;
+                } else {
+                    $(".comments-pagination").show();
+                }
+
+                comments.hide();
+                const start = (page - 1) * commentsPerPage;
+                const end = start + commentsPerPage;
+                comments.slice(start, end).show();
+
+                $("#pageInfo").text(`Strona ${page} z ${totalPages}`);
+                $("#prevPage").prop("disabled", page === 1);
+                $("#nextPage").prop("disabled", page === totalPages);
+            }
+
+            $("#prevPage").click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    showPage(currentPage);
                 }
             });
-        });
 
-        /* ================= DELETE ================= */
-        $("#openDeleteModal").click(function () {
-            $("#deleteOverlay").addClass("active");
-            $("#pageWrapper").addClass("blurred");
-        });
-
-        $("#cancelDelete").click(function () {
-            $("#deleteOverlay").removeClass("active");
-            $("#pageWrapper").removeClass("blurred");
-        });
-
-        $("#confirmDelete").click(function () {
-            $.ajax({
-                url: "@Url.Action("Delete", "Post")",
-                type: "POST",
-                headers: {
-                    'RequestVerificationToken': getCsrfToken()
-                },
-                data: { id: @Model.Id },
-                success: function () {
-                    window.location.href = "@Url.Action("Index", "Post")";
-                },
-                error: function () {
-                    alert("Delete failed.");
+            $("#nextPage").click(function () {
+                const totalComments = $("#commentsContainer .comment").length;
+                const totalPages = Math.ceil(totalComments / commentsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    showPage(currentPage);
                 }
             });
-        });
 
-    });
-</script>
+            showPage(currentPage);
+
+            $(document).on("DOMNodeInserted", "#commentsContainer", function () {
+                const totalComments = $("#commentsContainer .comment").length;
+                const totalPages = Math.ceil(totalComments / commentsPerPage);
+                if (currentPage > totalPages) currentPage = totalPages;
+                showPage(currentPage);
+            });
+        });
+    </script>
 }
