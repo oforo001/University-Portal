@@ -17,7 +17,8 @@
 
         <hr />
 
-        <form asp-action="Create"
+        <form id="createPostForm"
+              asp-action="Create"
               asp-controller="Post"
               method="post"
               enctype="multipart/form-data">
@@ -77,6 +78,7 @@
 
         </form>
     </div>
+    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1055;"></div>
 </div>
 
 @section Scripts {
@@ -84,14 +86,74 @@
 
     <script src="https://cdn.tiny.cloud/1/03ew85vdd7hum4szd9dfz4wnix6lomyle1v1hlr2coxod5o3/tinymce/8/tinymce.min.js"
             referrerpolicy="origin"
-            crossorigin="anonymous">
-    </script>
+            crossorigin="anonymous"></script>
 
     <script>
         tinymce.init({
             selector: 'textarea',
             menubar: false,
             height: 300
+        });
+
+        $(function () {
+            function getCsrfToken() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            window.showToast = function (success, message) {
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+                const toastHtml = `
+                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                        <div class="toast-header ${typeClass} text-white border-0">
+                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                            <button type="button" class="btn-close btn-close-white"></button>
+                        </div>
+                        <div class="toast-body">${message}</div>
+                    </div>`;
+                $("#toastContainer").append(toastHtml);
+                const toast = $("#" + toastId);
+                toast.on("click", () => toast.fadeOut(300, () => toast.remove()));
+                setTimeout(() => toast.fadeOut(300, () => toast.remove()), 10000);
+            };
+
+            $("#createPostForm").submit(function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const btn = form.find("button[type=submit]");
+                btn.prop("disabled", true);
+
+                tinymce.triggerSave();
+                const formData = new FormData(form[0]);
+
+                $.ajax({
+                    type: "POST",
+                    url: form.attr("action"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': getCsrfToken() },
+                    success: function (res) {
+                        if (res.success) {
+                            showToast(true, res.message || "Post został dodany.");
+                            if (res.redirectUrl) {
+                                setTimeout(() => window.location.href = res.redirectUrl, 1500);
+                            } else {
+                                form[0].reset();
+                                tinymce.get().setContent('');
+                            }
+                        } else if (res.error) {
+                            showToast(false, res.error);
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Wystąpił nieoczekiwany błąd podczas tworzenia posta.");
+                    },
+                    complete: function () {
+                        btn.prop("disabled", false);
+                    }
+                });
+            });
         });
     </script>
 }

@@ -13,25 +13,6 @@ namespace University_Portal.AppServices.E_mail
         {
             _config=config;
         }
-
-        public async Task SendEmailAsync(EmailDto request)
-        {
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_config.GetSection("EmailUsername").Value));
-            email.To.Add(MailboxAddress.Parse(request.To));
-            email.Subject = request.Subject;
-            email.Body = new TextPart(TextFormat.Html) { Text = request.Body };
-
-            using var smtp = new SmtpClient();
-
-            await smtp.ConnectAsync(_config.GetSection("EmailHost").Value, int.Parse(_config.GetSection("Port").Value), SecureSocketOptions.SslOnConnect);
-
-            await smtp.AuthenticateAsync(_config.GetSection("EmailUsername").Value, _config.GetSection("EmailPassword").Value);
-
-            await smtp.SendAsync(email);
-
-            await smtp.DisconnectAsync(true);
-        }
         public async Task<string> SendEmailVerificationAsync(string toEmail)
         {
             string token = GenerateVerificationToken();
@@ -76,6 +57,67 @@ namespace University_Portal.AppServices.E_mail
             });
 
             return token;
+        }
+        public async Task SendWelcomeEmailAsync(string toEmail, string fullName, string password, string role)
+        {
+            string subject = "Witamy w University Portal!";
+            string body = $@"
+                            <html>
+                              <body style='font-family: Arial, sans-serif; background-color: #f4f6f8; margin:0;padding:0;'>
+                                <table width='100%' cellpadding='0' cellspacing='0'>
+                                  <tr>
+                                    <td align='center' style='padding:40px 0;'>
+                                      <table width='400' cellpadding='0' cellspacing='0' style='background-color:#fff;border-radius:8px;padding:30px;'>
+                                        <tr>
+                                          <td align='center' style='padding-bottom:20px;'>
+                                            <h2 style='color:#333;'>Witamy, {fullName}!</h2>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td style='color:#555;font-size:16px;line-height:1.5;text-align:center;'>
+                                            <p>Twoje konto zostało utworzone w University Portal.</p>
+                                            <p><strong>E-mail:</strong> {toEmail}</p>
+                                            <p><strong>Hasło:</strong> {password}</p>
+                                            <p><strong>Rola:</strong> {role}</p>
+                                            <p>Prosimy zalogować się i zmienić hasło po pierwszym logowaniu.</p>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td style='padding-top:20px;font-size:12px;color:#999;text-align:center;'>
+                                            <p>Jeśli nie spodziewałeś się tego maila, skontaktuj się z administratorem.</p>
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </body>
+                            </html>";
+
+            await SendEmailAsync(new EmailDto
+            {
+                To = toEmail,
+                Subject = subject,
+                Body = body
+            });
+        }
+        public async Task SendEmailAsync(EmailDto request)
+        {
+            var email = new MimeMessage();
+            email.From.Add(MailboxAddress.Parse(_config.GetSection("EmailUsername").Value));
+            email.To.Add(MailboxAddress.Parse(request.To));
+            email.Subject = request.Subject;
+            email.Body = new TextPart(TextFormat.Html) { Text = request.Body };
+
+            using var smtp = new SmtpClient();
+
+            await smtp.ConnectAsync(_config.GetSection("EmailHost").Value, int.Parse(_config.GetSection("Port").Value), SecureSocketOptions.SslOnConnect);
+
+            await smtp.AuthenticateAsync(_config.GetSection("EmailUsername").Value, _config.GetSection("EmailPassword").Value);
+
+            await smtp.SendAsync(email);
+
+            await smtp.DisconnectAsync(true);
         }
         private static string GenerateVerificationToken()
         {
