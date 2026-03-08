@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35208.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "University-Portal", "University-Portal.csproj", "{1CFAD97E-2B26-4310-9ADD-C079DFCFFD7D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "University-Portal", "University-Portal.csproj", "{1CFAD97E-2B26-4310-9ADD-C079DFCFFD7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "University-Portal.Tests", "..\University-Portal.Tests\University-Portal.Tests.csproj", "{D8723A93-D1B0-4B11-B237-BBC781F3FFA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{1CFAD97E-2B26-4310-9ADD-C079DFCFFD7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CFAD97E-2B26-4310-9ADD-C079DFCFFD7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1CFAD97E-2B26-4310-9ADD-C079DFCFFD7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8723A93-D1B0-4B11-B237-BBC781F3FFA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8723A93-D1B0-4B11-B237-BBC781F3FFA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8723A93-D1B0-4B11-B237-BBC781F3FFA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8723A93-D1B0-4B11-B237-BBC781F3FFA5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
