@@ -185,48 +185,34 @@ namespace University_Portal.Controllers
             });
         }
 
-        public IActionResult ChangePassword(string username)
+        public IActionResult ChangePassword()
         {
-            if (string.IsNullOrEmpty(username))
-            {
-                return RedirectToAction("VerifyEmail", "Account");
-            }
-            return View(new ChangePasswordViewModel { Email = username });
+            return View();
         }
         [HttpPost]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var user = await userManager.FindByNameAsync(model.Email);
-                if (user != null)
-                {
-                    var result = await userManager.RemovePasswordAsync(user);
-                    if (result.Succeeded)
-                    {
-                        result = await userManager.AddPasswordAsync(user, model.NewPassword);
-                        return RedirectToAction("Login", "Account");
-                    }
-                    else
-                    {
-                        foreach (var error in result.Errors)
-                        {
-                            ModelState.AddModelError(string.Empty, error.Description);
-                        }
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Email not found");
-                    return View(model);
-                }
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+
+                return Json(new { success = false, errors });
             }
-            else
+
+            var (success, message) = await AccountClient.ChangePasswordAsync(userManager, model);
+
+            if (!success)
+                return Json(new { success = false, errors = new[] { message } });
+
+            return Json(new
             {
-                ModelState.AddModelError(string.Empty, "Something went wrong");
-                return View(model);
-            }
+                success = true,
+                message,
+                redirectUrl = Url.Action("Login", "Account")
+            });
         }
         public async Task<IActionResult> Logout()
         {

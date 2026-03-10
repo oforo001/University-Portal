@@ -32,5 +32,16 @@ namespace University_Portal.AppServices.Account
             var strategy = new LoginStrategy(signInManager, userManager);
             return await strategy.ExecuteAsync(model);
         }
+
+        /// <summary>
+        /// Loguje użytkownika i zwraca jego rolę.
+        /// </summary>
+        public static async Task<(bool Success, string Message)> ChangePasswordAsync(
+            UserManager<AppUser> userManager,
+            ChangePasswordViewModel model)
+        {
+            var strategy = new ChangePasswordStrategy(userManager);
+            return await strategy.ExecuteAsync(model);
+        }
     }
 }
