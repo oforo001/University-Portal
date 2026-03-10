@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using University_Portal.AppServices.E_mail;
 using University_Portal.Models;
 using University_Portal.ViewModels;
 
@@ -6,11 +7,13 @@ namespace University_Portal.AppServices.Account
 {
     public class ChangePasswordStrategy : IAccountActionStrategy<ChangePasswordViewModel>
     {
-        private readonly UserManager<AppUser> userManager;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailService _emailService;
 
-        public ChangePasswordStrategy(UserManager<AppUser> userManager)
+        public ChangePasswordStrategy(UserManager<AppUser> userManager, IEmailService emailService)
         {
-            this.userManager = userManager;
+            this._userManager = userManager;
+            this._emailService = emailService;
         }
 
         public async Task<(bool Success, string Message)> ExecuteAsync(ChangePasswordViewModel model)
@@ -18,7 +21,7 @@ namespace University_Portal.AppServices.Account
             if (model.NewPassword != model.ConfirmNewPassword)
                 return (false, "Hasła nie są takie same.");
 
-            var user = await userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
 
             if (user == null)
                 return (false, "Nie znaleziono użytkownika.");
@@ -26,7 +29,16 @@ namespace University_Portal.AppServices.Account
             if (!user.IsActive)
                 return (false, "Konto użytkownika nie jest aktywne.");
 
-            var removeResult = await userManager.RemovePasswordAsync(user);
+            if (string.IsNullOrEmpty(user.EmailVerificationToken) ||
+                user.EmailVerificationTokenExpiry == null ||
+                user.EmailVerificationTokenExpiry < DateTime.UtcNow ||
+                user.EmailVerificationToken != model.VerificationCode)
+            {
+                return (false, "Nieprawidłowy lub wygasły kod weryfikacyjny.");
+            }
+
+
+            var removeResult = await _userManager.RemovePasswordAsync(user);
 
             if (!removeResult.Succeeded)
             {
@@ -35,7 +47,7 @@ namespace University_Portal.AppServices.Account
                 return (false, error);
             }
 
-            var addResult = await userManager.AddPasswordAsync(user, model.NewPassword);
+            var addResult = await _userManager.AddPasswordAsync(user, model.NewPassword);
 
             if (!addResult.Succeeded)
             {
@@ -45,6 +57,19 @@ namespace University_Portal.AppServices.Account
             }
 
             return (true, "Hasło zostało zmienione pomyślnie.");
+        }
+        public async Task SendAndStoreVerificationTokenAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) throw new Exception("Nie znaleziono użytkownika");
+            if (!user.IsActive) throw new Exception("Konto nieaktywne");
+
+            string token = await _emailService.SendEmailVerificationAsync(email);
+
+            user.EmailVerificationToken = token;
+            user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+
+            await _userManager.UpdateAsync(user);
         }
     }
 }

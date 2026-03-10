@@ -18,4 +18,8 @@ public class ChangePasswordViewModel
     [Display(Name = "Confirm New Password")]
     [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
     public string ConfirmNewPassword { get; set; }
+    [Required(ErrorMessage = "Verification code is required.")]
+    [Display(Name = "Verification Code")]
+    public string VerificationCode { get; set; }
+
 }

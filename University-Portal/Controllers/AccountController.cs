@@ -202,7 +202,7 @@ namespace University_Portal.Controllers
                 return Json(new { success = false, errors });
             }
 
-            var (success, message) = await AccountClient.ChangePasswordAsync(userManager, model);
+            var (success, message) = await AccountClient.ChangePasswordAsync(userManager, emailService, model);
 
             if (!success)
                 return Json(new { success = false, errors = new[] { message } });

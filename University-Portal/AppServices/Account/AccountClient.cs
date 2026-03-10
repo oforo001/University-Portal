@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using University_Portal.AppServices.E_mail;
 using University_Portal.Models;
 using University_Portal.ViewModels;
 
@@ -38,9 +39,10 @@ namespace University_Portal.AppServices.Account
         /// </summary>
         public static async Task<(bool Success, string Message)> ChangePasswordAsync(
             UserManager<AppUser> userManager,
+            IEmailService emailService,
             ChangePasswordViewModel model)
         {
-            var strategy = new ChangePasswordStrategy(userManager);
+            var strategy = new ChangePasswordStrategy(userManager, emailService);
             return await strategy.ExecuteAsync(model);
         }
     }

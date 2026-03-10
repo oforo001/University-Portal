@@ -5,5 +5,6 @@ namespace University_Portal.AppServices.E_mail
     public interface IEmailService
     {
         Task SendEmailAsync(EmailDto request);
+        Task<string> SendEmailVerificationAsync(string toEmail);
     }
 }
