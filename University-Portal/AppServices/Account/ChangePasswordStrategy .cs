@@ -27,14 +27,6 @@ namespace University_Portal.AppServices.Account
             if (!user.IsActive)
                 return (false, "Konto użytkownika nie jest aktywne.");
 
-            //if (string.IsNullOrEmpty(user.PasswordResetToken) ||
-            //    user.PasswordResetTokenExpiry == null ||
-            //    user.PasswordResetTokenExpiry < DateTime.UtcNow ||
-            //    user.PasswordResetToken != model.VerificationCode)
-            //{
-            //    return (false, "Nieprawidłowy lub wygasły kod weryfikacyjny.");
-            //}
-
             var removeResult = await _userManager.RemovePasswordAsync(user);
 
             if (!removeResult.Succeeded)
