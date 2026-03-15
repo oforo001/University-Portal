@@ -12,12 +12,20 @@ namespace University_Portal.Controllers
     {
         private readonly SignInManager<AppUser> signInManager;
         private readonly UserManager<AppUser> userManager;
-        private readonly EmailService emailService;
-        public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, EmailService emailService)
+        private readonly IEmailService emailService;
+        private readonly IVerificationTokenService verificationTokenService;
+        private readonly IAccountActionStrategy<ChangePasswordViewModel> changePasswordStrategy;
+        private readonly IAccountActionStrategy<string> sendResetTokenStrategy;
+
+        public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IEmailService emailService,IVerificationTokenService verificationTokenService, IAccountActionStrategy<ChangePasswordViewModel> changePasswordStrategy, IAccountActionStrategy<string> sendResetTokenStrategy)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
             this.emailService = emailService;
+            this.verificationTokenService = verificationTokenService;
+
+            this.changePasswordStrategy = changePasswordStrategy;
+            this.sendResetTokenStrategy = sendResetTokenStrategy;
         }
         public IActionResult Login()
         {
@@ -111,11 +119,13 @@ namespace University_Portal.Controllers
 
                 try
                 {
-                    string token = await emailService.SendEmailVerificationAsync(user.Email);
+                    var token = verificationTokenService.GenerateToken();
 
                     user.EmailVerificationToken = token;
                     user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+
                     await userManager.UpdateAsync(user);
+                    await emailService.SendEmailVerificationAsync(user.Email, token);
                 }
                 catch (Exception ex)
                 {
@@ -130,7 +140,7 @@ namespace University_Portal.Controllers
                 {
                     success = true,
                     message = "Rejestracja zakończona sukcesem! Sprawdź swoją pocztę i wprowadź kod weryfikacyjny.",
-                    redirectUrl = Url.Action("VerifyEmail", "Account", new { email = user.Email })
+                    redirectUrl = Url.Action("VerifyEmailByRegistration", "Account", new { email = user.Email })
                 });
             }
             else
@@ -139,7 +149,7 @@ namespace University_Portal.Controllers
                 return Json(new { success = false, errors });
             }
         }
-        public IActionResult VerifyEmail(string email)
+        public IActionResult VerifyEmailByRegistration(string email)
         {
             var model = new VerifyEmailViewModel
             {
@@ -147,8 +157,137 @@ namespace University_Portal.Controllers
             };
             return View(model);
         }
+        public IActionResult VerifyEmailByChangePassword()
+        {
+
+            return View();
+        }
         [HttpPost]
-        public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyEmailByChangePassword(VerifyEmailViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+                return Json(new { success = false, errors });
+            }
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return Json(new { success = false, errors = new List<string> { "Nie znaleziono użytkownika." } });
+            }
+
+            try
+            {
+                var token = verificationTokenService.GenerateToken();
+
+                user.PasswordResetToken = token;
+                user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+
+                await userManager.UpdateAsync(user);
+
+                await emailService.SendEmailVerificationAsync(user.Email, token);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    errors = new List<string> { "Wysyłka e-maila nie powiodła się: " + ex.Message }
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = "Weryfikacja rozpoczęta! Sprawdź swoją pocztę i wprowadź kod weryfikacyjny. Jeśli nie otrzymałeś e-maila, sprawdź poprawność adresu.",
+                redirectUrl = Url.Action("VerifyTokenByChangePassword", "Account", new { email = user.Email })
+            });
+        }
+        public IActionResult VerifyTokenByChangePassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return RedirectToAction("Login", "Account");
+
+            var model = new VerifyEmailViewModel
+            {
+                Email = email
+            };
+
+            return View(model);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyTokenByChangePassword(VerifyEmailViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+                return Json(new { success = false, errors });
+            }
+
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return Json(new { success = false, errors = new List<string> { "Nie znaleziono użytkownika." } });
+            }
+
+            if (user.PasswordResetToken != model.Token ||
+                user.PasswordResetTokenExpiry == null ||
+                user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                return Json(new { success = false, errors = new List<string> { "Nieprawidłowy lub wygasły kod weryfikacyjny." } });
+            }
+
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+            await userManager.UpdateAsync(user);
+
+            return Json(new
+            {
+                success = true,
+                message = "Kod poprawny! Teraz możesz ustawić nowe hasło.",
+                redirectUrl = Url.Action("ChangePassword", "Account", new { email = user.Email })
+            });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendPasswordResetToken(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return Json(new { success = false, errors = new[] { "Email is required." } });
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+                return Json(new { success = false, errors = new[] { "User not found." } });
+
+            try
+            {
+                var token = verificationTokenService.GenerateToken();
+
+                user.PasswordResetToken = token;
+                user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+
+                await userManager.UpdateAsync(user);
+                await emailService.SendEmailVerificationAsync(user.Email, token);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, errors = new[] { "Failed to send email: " + ex.Message } });
+            }
+
+            return Json(new { success = true, message = "Verification code resent successfully!" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyEmailByRegistration(VerifyEmailViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -185,48 +324,58 @@ namespace University_Portal.Controllers
             });
         }
 
-        public IActionResult ChangePassword(string username)
+        public IActionResult ChangePassword(string email)
         {
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrEmpty(email))
+                return RedirectToAction("Login", "Account");
+
+            ViewData["UserEmail"] = email;
+
+            var model = new ChangePasswordViewModel()
             {
-                return RedirectToAction("VerifyEmail", "Account");
-            }
-            return View(new ChangePasswordViewModel { Email = username });
+                VerificationCode = ""
+            };
+
+            return View(model);
         }
         [HttpPost]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var user = await userManager.FindByNameAsync(model.Email);
-                if (user != null)
-                {
-                    var result = await userManager.RemovePasswordAsync(user);
-                    if (result.Succeeded)
-                    {
-                        result = await userManager.AddPasswordAsync(user, model.NewPassword);
-                        return RedirectToAction("Login", "Account");
-                    }
-                    else
-                    {
-                        foreach (var error in result.Errors)
-                        {
-                            ModelState.AddModelError(string.Empty, error.Description);
-                        }
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Email not found");
-                    return View(model);
-                }
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+
+                return Json(new { success = false, errors });
             }
-            else
+
+            var (success, message) = await changePasswordStrategy.ExecuteAsync(model);
+
+            if (!success)
+                return Json(new { success = false, errors = new[] { message } });
+
+            return Json(new
             {
-                ModelState.AddModelError(string.Empty, "Something went wrong");
-                return View(model);
-            }
+                success = true,
+                message,
+                redirectUrl = Url.Action("Login", "Account")
+            });
+        }
+        [HttpPost]
+        public async Task<IActionResult> SendPasswordResetToken(string email)
+        {
+            var (success, message) = await sendResetTokenStrategy.ExecuteAsync(email);
+
+            if (!success)
+                return Json(new { success = false, errors = new[] { message } });
+
+            return Json(new
+            {
+                success = true,
+                message
+            });
         }
         public async Task<IActionResult> Logout()
         {

@@ -1,51 +1,34 @@
 ﻿@using University_Portal.ViewModels
-@model LoginViewModel
+@model VerifyEmailViewModel
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Verify Email";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="account-container">
     <div class="account-box">
-        <h2 class="text-center mb-4">Logowanie</h2>
+        <h2 class="text-center mb-4">Verify Email</h2>
 
-        <form id="loginForm" asp-action="Login" method="post">
+        <form id="verifyEmailForm" asp-action="VerifyEmailByRegistration" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
                 <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
+                <input asp-for="Email" class="form-control" readonly />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <label asp-for="Token" class="form-label"></label>
+                <input asp-for="Token" class="form-control" maxlength="6" />
+                <span asp-validation-for="Token" class="text-danger"></span>
             </div>
 
-            <div class="float-end mb-3">
-                <a asp-controller="Account" asp-action="VerifyEmailByChangePassword" class="text-decoration-none">
-                    Zapomniałeś hasła?
-                </a>
-            </div>
+            <input type="submit" value="Verify" class="btn btn-success w-100" />
 
-            <div class="form-check mb-3">
-                <label class="form-check-label">
-                    <input asp-for="RememberMe" class="form-check-input" />
-                    @Html.DisplayNameFor(a => a.RememberMe)
-                </label>
-            </div>
-
-            <input type="submit" value="Zaloguj się" class="btn btn-success w-100" />
-
-            <p class="text-center mt-2">
-                Nie masz konta? <a asp-controller="Account" asp-action="Register" class="text-decoration-none">Zarejestruj się</a>
-            </p>
-
-            <div class="text-center">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Powrót</a>
+            <div class="text-center mt-2">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
             </div>
         </form>
 
@@ -67,17 +50,16 @@
                 const typeClass = success ? "bg-success" : "bg-danger";
 
                 const toastHtml = `
-                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
-                         role="alert" style="cursor:pointer;">
-                        <div class="toast-header ${typeClass} text-white border-0">
-                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
-                            <button type="button" class="btn-close btn-close-white"></button>
-                        </div>
-                        <div class="toast-body">
-                            ${message}
-                        </div>
-                    </div>
-                `;
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                                <div class="toast-header ${typeClass} text-white border-0">
+                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                    <button type="button" class="btn-close btn-close-white"></button>
+                                </div>
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                            </div>
+                        `;
                 $("#toastContainer").append(toastHtml);
 
                 const toast = $("#" + toastId);
@@ -90,7 +72,7 @@
                 }, 10000);
             };
 
-            $("#loginForm").submit(function (e) {
+            $("#verifyEmailForm").submit(function (e) {
                 e.preventDefault();
                 const form = $(this);
                 const btn = form.find("input[type=submit]");
@@ -102,10 +84,10 @@
                     data: form.serialize(),
                     success: function (res) {
                         if (res.success) {
-                            showToast(true, "Logowanie udane!");
+                            showToast(true, res.message);
                             setTimeout(() => {
                                 window.location.href = res.redirectUrl;
-                            }, 500);
+                            }, 1500);
                         } else if (res.errors) {
                             showToast(false, res.errors.join("<br>"));
                         }

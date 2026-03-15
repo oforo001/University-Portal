@@ -13,9 +13,8 @@ namespace University_Portal.AppServices.E_mail
         {
             _config=config;
         }
-        public async Task<string> SendEmailVerificationAsync(string toEmail)
+        public async Task SendEmailVerificationAsync(string toEmail, string token)
         {
-            string token = GenerateVerificationToken();
             string subject = "Twój kod weryfikacyjny";
             string body = $@"
                             <html>
@@ -32,7 +31,7 @@ namespace University_Portal.AppServices.E_mail
                                         <tr>
                                           <td style='color: #555555; font-size: 16px; line-height: 1.5; text-align: center;'>
                                             <p>Witaj,</p>
-                                            <p>Aby zakończyć rejestrację, użyj poniższego kodu weryfikacyjnego:</p>
+                                            <p>Aby zakończyć, użyj poniższego kodu weryfikacyjnego:</p>
                                             <p style='font-size: 24px; font-weight: bold; color: #1a73e8; margin: 20px 0;'>{token}</p>
                                             <p>Kod jest ważny przez <strong>15 minut</strong>.</p>
                                           </td>
@@ -55,8 +54,6 @@ namespace University_Portal.AppServices.E_mail
                 Subject = subject,
                 Body = body
             });
-
-            return token;
         }
         public async Task SendWelcomeEmailAsync(string toEmail, string fullName, string password, string role)
         {
@@ -119,13 +116,27 @@ namespace University_Portal.AppServices.E_mail
 
             await smtp.DisconnectAsync(true);
         }
-        private static string GenerateVerificationToken()
+        public async Task SendPasswordResetEmailAsync(string toEmail, string token)
         {
-            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-            var bytes = new byte[4];
-            rng.GetBytes(bytes);
-            int number = Math.Abs(BitConverter.ToInt32(bytes, 0)) % 1000000;
-            return number.ToString("D6");
+            string subject = "Reset hasła";
+
+            string body = $@"
+                            <html>
+                            <body>
+                                <h2>Reset hasła</h2>
+                                <p>Użyj poniższego kodu aby zresetować hasło:</p>
+                                <h1>{token}</h1>
+                                <p>Kod jest ważny przez 15 minut.</p>
+                            </body>
+                            </html>";
+
+            await SendEmailAsync(new EmailDto
+            {
+                To = toEmail,
+                Subject = subject,
+                Body = body
+            });
         }
+        
     }
 }
