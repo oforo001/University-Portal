@@ -21,8 +21,5 @@ namespace University_Portal.ViewModels
         [Display(Name = "Confirm Password")]
         [Compare("Password", ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; }
-        [Required(ErrorMessage = "Verification code is required.")]
-        [Display(Name = "Verification Code")]
-        public string VerificationCode { get; set; }
     }
 }

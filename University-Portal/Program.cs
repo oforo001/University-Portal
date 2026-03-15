@@ -3,6 +3,7 @@ using University_Portal.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using University_Portal.Helpers;
+using University_Portal.AppServices.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,12 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<University_Portal.AppServices.E_mail.IEmailService, University_Portal.AppServices.E_mail.EmailService>();
+builder.Services.AddScoped<University_Portal.AppServices.E_mail.IVerificationTokenService, University_Portal.AppServices.E_mail.VerificationTokenService>();
+
+builder.Services.AddScoped<IAccountActionStrategy<ChangePasswordViewModel>, ChangePasswordStrategy>();
+builder.Services.AddScoped<IAccountActionStrategy<string>, SendPasswordResetTokenStrategy>();
 
 var app = builder.Build();
 

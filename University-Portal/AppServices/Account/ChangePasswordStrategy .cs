@@ -8,12 +8,10 @@ namespace University_Portal.AppServices.Account
     public class ChangePasswordStrategy : IAccountActionStrategy<ChangePasswordViewModel>
     {
         private readonly UserManager<AppUser> _userManager;
-        private readonly IEmailService _emailService;
 
-        public ChangePasswordStrategy(UserManager<AppUser> userManager, IEmailService emailService)
+        public ChangePasswordStrategy(UserManager<AppUser> userManager)
         {
-            this._userManager = userManager;
-            this._emailService = emailService;
+            _userManager = userManager;
         }
 
         public async Task<(bool Success, string Message)> ExecuteAsync(ChangePasswordViewModel model)
@@ -29,14 +27,13 @@ namespace University_Portal.AppServices.Account
             if (!user.IsActive)
                 return (false, "Konto użytkownika nie jest aktywne.");
 
-            if (string.IsNullOrEmpty(user.EmailVerificationToken) ||
-                user.EmailVerificationTokenExpiry == null ||
-                user.EmailVerificationTokenExpiry < DateTime.UtcNow ||
-                user.EmailVerificationToken != model.VerificationCode)
-            {
-                return (false, "Nieprawidłowy lub wygasły kod weryfikacyjny.");
-            }
-
+            //if (string.IsNullOrEmpty(user.PasswordResetToken) ||
+            //    user.PasswordResetTokenExpiry == null ||
+            //    user.PasswordResetTokenExpiry < DateTime.UtcNow ||
+            //    user.PasswordResetToken != model.VerificationCode)
+            //{
+            //    return (false, "Nieprawidłowy lub wygasły kod weryfikacyjny.");
+            //}
 
             var removeResult = await _userManager.RemovePasswordAsync(user);
 
@@ -56,20 +53,12 @@ namespace University_Portal.AppServices.Account
                 return (false, error);
             }
 
-            return (true, "Hasło zostało zmienione pomyślnie.");
-        }
-        public async Task SendAndStoreVerificationTokenAsync(string email)
-        {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null) throw new Exception("Nie znaleziono użytkownika");
-            if (!user.IsActive) throw new Exception("Konto nieaktywne");
-
-            string token = await _emailService.SendEmailVerificationAsync(email);
-
-            user.EmailVerificationToken = token;
-            user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
 
             await _userManager.UpdateAsync(user);
+
+            return (true, "Hasło zostało zmienione pomyślnie.");
         }
     }
 }

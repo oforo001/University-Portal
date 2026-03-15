@@ -39,10 +39,9 @@ namespace University_Portal.AppServices.Account
         /// </summary>
         public static async Task<(bool Success, string Message)> ChangePasswordAsync(
             UserManager<AppUser> userManager,
-            IEmailService emailService,
             ChangePasswordViewModel model)
         {
-            var strategy = new ChangePasswordStrategy(userManager, emailService);
+            var strategy = new ChangePasswordStrategy(userManager);
             return await strategy.ExecuteAsync(model);
         }
     }
