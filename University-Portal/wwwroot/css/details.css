@@ -11,7 +11,6 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ================= GENERAL ================= */
 .post-content,
 .comment-content {
     overflow-wrap: break-word;
@@ -56,7 +55,6 @@ body {
     justify-content: space-between;
 }
 
-/* ================= POST CARD ================= */
 .post-container {
     max-width: 900px;
     margin: 40px auto;
@@ -108,7 +106,6 @@ body {
     display: block;
 }
 
-/* ================= POST HEADER ================= */
 .post-header {
     margin-bottom: 24px;
     padding-bottom: 16px;
@@ -139,7 +136,6 @@ body {
         box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
-/* ================= CONTENT CARD ================= */
 .content-card {
     background: #ffffff;
     padding: 32px;
@@ -184,7 +180,6 @@ body {
     margin-bottom: 32px;
 }
 
-/* ================= COMMENTS ================= */
 .comments-section {
     padding-top: 32px;
     border-top: 1px solid var(--border-soft);
@@ -258,7 +253,6 @@ body {
     opacity: 1;
 }
 
-/* ================= ADD COMMENT ================= */
 .add-comment-card {
     margin-top: 32px;
     padding: 24px;
@@ -352,7 +346,6 @@ body {
         transform: scale(0.97);
     }
 
-/* ================= MEDIA QUERIES ================= */
 @media (max-width: 768px) {
     .post-container {
         margin: 20px;
@@ -393,3 +386,6 @@ body {
         .comments-pagination button:hover:not(:disabled) {
             background: #f3f4f6;
         }
+body.modal-open {
+    overflow: hidden;
+}
