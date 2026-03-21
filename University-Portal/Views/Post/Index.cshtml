@@ -2,32 +2,42 @@
 @model IEnumerable<University_Portal.Models.Post>
 
 @{
-    ViewData["Title"] = "Blog Posts";
-    int? selectedCategoryId = Context.Request.Query["categoryId"].FirstOrDefault() != null
-        ? int.Parse(Context.Request.Query["categoryId"])
-        : (int?)null;
+    ViewData["Title"] = "Blog";
+    int? selectedCategoryId = int.TryParse(Context.Request.Query["categoryId"], out var cid) ? cid : (int?)null;
 }
 
 <link rel="stylesheet" href="~/css/createpost.css" asp-append-version="true" />
 
-<div class="text-center mb-4">
+@Html.AntiForgeryToken()
 
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1055;"></div>
+
+<div id="categoryContainer" class="text-center mb-4">
     <a asp-action="Index"
        class="badge rounded-pill px-3 py-2 me-2 category-badge
               @(selectedCategoryId == null ? "bg-dark text-white" : "bg-warning text-dark")">
-        All
+        Wszystkie
     </a>
 
     @if (ViewBag.Categories != null)
     {
-        foreach (var category in ViewBag.Categories)
+        @foreach (var category in ViewBag.Categories)
         {
-            <a asp-action="Index"
-               asp-route-categoryId="@category.Id"
-               class="badge rounded-pill px-3 py-2 me-2 category-badge
-                      @(selectedCategoryId == category.Id ? "bg-dark text-white" : "bg-warning text-dark")">
-                @category.Name
-            </a>
+            <span class="badge-wrapper position-relative me-2 mb-2">
+                <a asp-action="Index"
+                   asp-route-categoryId="@category.Id"
+                   class="badge rounded-pill px-3 py-2 category-badge
+              @(selectedCategoryId == category.Id ? "bg-dark text-white" : "bg-warning text-dark")">
+                    @category.Name
+                </a>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <span class="delete-category-btn"
+                          data-category-id="@category.Id"
+                          title="Usuń kategorię">×</span>
+                }
+            </span>
         }
     }
 </div>
@@ -38,8 +48,13 @@
         <a class="btn btn-primary shadow-sm"
            asp-controller="Post"
            asp-action="Create">
-            + Create New Post
+            + Utwórz nowy post
         </a>
+
+        <button class="btn btn-outline-secondary ms-2"
+                id="openCategoryModal">
+            + Kategoria
+        </button>
     </div>
 }
 
@@ -66,30 +81,26 @@
                         </span>
                     }
 
-                    <h5 class="card-title fw-bold">
-                        @post.Title
-                    </h5>
+                    <h5 class="card-title fw-bold">@post.Title</h5>
 
                     <small class="text-muted mb-2">
-                        By <strong>@post.Author</strong> ·
+                        Autor: <strong>@post.Author</strong> ·
                         @post.PublishDate.ToString("MMM dd, yyyy")
                     </small>
 
                     @{
-                        var content = RemoveHtmlTagHelper.RemoveHtmlTags(post.Content);
+                        var content = RemoveHtmlTagHelper.RemoveHtmlTags(post.Content) ?? "";
                     }
 
                     <p class="card-text">
-                        @(content.Length > 100
-                            ? content.Substring(0, 100) + "..."
-                            : content)
+                        @(content.Length > 100 ? content.Substring(0, 100) + "..." : content)
                     </p>
 
                     <a asp-action="Details"
                        asp-controller="Post"
                        asp-route-id="@post.Id"
                        class="btn btn-outline-primary mt-auto">
-                        Read more →
+                        Czytaj dalej →
                     </a>
 
                 </div>
@@ -97,3 +108,181 @@
         </div>
     }
 </div>
+
+<div id="categoryModal" class="modal-overlay">
+    <div class="modal-card">
+
+        <div class="modal-header">
+            <h3>Utwórz kategorię</h3>
+            <p class="modal-subtitle">
+            </p>
+        </div>
+
+        <div class="modal-body">
+            <input id="categoryName"
+                   class="modal-input"
+                   placeholder="Wpisz nazwę kategorii..."
+                   maxlength="50" />
+        </div>
+
+        <div class="modal-actions">
+            <button id="cancelCategory" class="btn-secondary">Anuluj</button>
+            <button id="createCategory" class="btn-primary">Utwórz</button>
+        </div>
+
+    </div>
+</div>
+
+<div id="deleteCategoryOverlay" class="delete-overlay">
+    <div class="delete-modal">
+        <h4>Usuń kategorię?</h4>
+        <p>Ta akcja jest nieodwracalna.</p>
+        <div class="delete-actions">
+            <button id="cancelDeleteCategory" class="btn btn-secondary">Anuluj</button>
+            <button id="confirmDeleteCategory" class="btn btn-danger">Usuń</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            function getCsrfToken() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            window.showToast = function (success, message) {
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+
+                const toastHtml = `
+                                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                                        <div class="toast-header ${typeClass} text-white border-0">
+                                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                            <button type="button" class="btn-close btn-close-white"></button>
+                                        </div>
+                                        <div class="toast-body">${message}</div>
+                                    </div>
+                                `;
+                $("#toastContainer").append(toastHtml);
+
+                const toast = $("#" + toastId);
+                toast.on("click", function () {
+                    toast.fadeOut(300, () => toast.remove());
+                });
+
+                setTimeout(() => {
+                    toast.fadeOut(300, () => toast.remove());
+                }, 10000);
+            };
+
+            $("#openCategoryModal").click(function () {
+                $("#categoryModal").addClass("active");
+                $("#categoryName").focus();
+            });
+
+            $("#cancelCategory").click(function () {
+                $("#categoryModal").removeClass("active");
+            });
+
+            $("#categoryModal").click(function (e) {
+                if (e.target.id === "categoryModal") {
+                    $(this).removeClass("active");
+                }
+            });
+
+            $("#categoryName").on("keydown", function (e) {
+                if (e.key === "Enter") {
+                    $("#createCategory").click();
+                }
+            });
+
+            $("#createCategory").click(function () {
+                const name = $("#categoryName").val().trim();
+                const btn = $(this);
+
+                if (!name) {
+                    showToast(false, "Wpisz nazwę kategorii");
+                    return;
+                }
+
+                btn.prop("disabled", true).text("Tworzenie...");
+
+                $.ajax({
+                    url: "/Category/Create",
+                    type: "POST",
+                    headers: { 'RequestVerificationToken': getCsrfToken() },
+                    data: { name: name },
+                    success: function (res) {
+                        console.log("AJAX response:", res);
+
+                        if (res.success) {
+                            showToast(true, res.message || "Kategoria utworzona pomyślnie");
+
+                            const newCategory = `
+                                                <a href="/Post?categoryId=${res.id}"
+                                                   class="badge rounded-pill px-3 py-2 me-2 category-badge bg-warning text-dark">
+                                                    ${res.name}
+                                                </a>
+                                            `;
+                            $("#categoryContainer").append(newCategory);
+                            $("#categoryName").val("");
+                            $("#categoryModal").removeClass("active");
+                        } else if (res.error) {
+                            showToast(false, res.error);
+                        } else {
+                            showToast(false, "Wystąpił nieznany błąd");
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Błąd serwera");
+                    },
+                    complete: function () {
+                        btn.prop("disabled", false).text("Utwórz");
+                    }
+                });
+            });
+        });
+
+        $(function () {
+            let categoryToDeleteId = null;
+            $(document).on("click", ".delete-category-btn", function () {
+                categoryToDeleteId = $(this).data("category-id");
+                $("#deleteCategoryOverlay").addClass("active");
+                $("#pageWrapper").addClass("blurred");
+            });
+
+            $("#cancelDeleteCategory").click(function () {
+                categoryToDeleteId = null;
+                $("#deleteCategoryOverlay").removeClass("active");
+                $("#pageWrapper").removeClass("blurred");
+            });
+
+            $("#confirmDeleteCategory").click(function () {
+                if (!categoryToDeleteId) return;
+
+                $.ajax({
+                    url: "/Category/Delete",
+                    type: "POST",
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    data: { id: categoryToDeleteId },
+                    success: function (res) {
+                        if (res.success) {
+                            $(`.delete-category-btn[data-category-id='${categoryToDeleteId}']`).closest(".badge-wrapper").remove();
+                            showToast(true, "Kategoria została usunięta.");
+                        } else {
+                            showToast(false, res.error || "Nie udało się usunąć kategorii.");
+                        }
+                        $("#deleteCategoryOverlay").removeClass("active");
+                        $("#pageWrapper").removeClass("blurred");
+                    },
+                    error: function () {
+                        showToast(false, "Błąd serwera przy usuwaniu kategorii.");
+                        $("#deleteCategoryOverlay").removeClass("active");
+                        $("#pageWrapper").removeClass("blurred");
+                    }
+                });
+            });
+        });
+    </script>
+}
