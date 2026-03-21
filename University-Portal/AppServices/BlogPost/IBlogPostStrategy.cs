@@ -1,16 +1,15 @@
 ﻿using University_Portal.Data;
-using University_Portal.ViewModels.AdminViewModels;
-using University_Portal.ViewModels.BlogViewModel;
+using University_Portal.Models;
+using Microsoft.AspNetCore.Http;
 
-namespace University_Portal.AppServices.BlogPost
+namespace University_Portal.AppServices.Blog
 {
-    public interface IBlogPostStrategy
+    public interface IBlogCategoryStrategy
     {
-        Task<(bool Success, string Message)> ExecuteAsync(
+        Task<(bool Success, string Message, Category? Result)> ExecuteAsync(
             ApplicationContext context,
-            int? postId,
-            string? userIdOrRole,
-            PostViewModel? model,
-            IWebHostEnvironment? env);
+            HttpContext httpContext,
+            Category? category = null,
+            int? categoryId = null);
     }
 }
