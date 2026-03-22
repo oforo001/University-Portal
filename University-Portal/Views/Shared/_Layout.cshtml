@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,8 +15,8 @@
 <body>
     <div class="side-menu">
         <nav>
-            <a asp-controller="Home" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Home") ? "active" : "")">
-                <i class="bi bi-house"></i> Home
+            <a asp-controller="Home" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Strona główna") ? "active" : "")">
+                <i class="bi bi-house"></i> Strona główna
             </a>
             <a asp-controller="Post" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Blog") ? "active" : "")">
                 <i class="bi bi-journal-text"></i> Blog
@@ -24,19 +24,19 @@
 
             @if (User.IsInRole("Admin"))
             {
-                <a asp-controller="Admin" asp-action="CreateEvent" class="@((ViewData["Title"]?.ToString() == "Create Event") ? "active" : "")">
-                    <i class="bi bi-plus-square"></i> Create Event
+                <a asp-controller="Admin" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Zarządzaj eventami") ? "active" : "")">
+                    <i class="bi bi-calendar-event"></i> Zarządzaj eventami
                 </a>
-                <a asp-controller="Post" asp-action="Create" class="@((ViewData["Title"]?.ToString() == "Create Post") ? "active" : "")">
-                    <i class="bi bi-plus-square"></i> Create Post
+                <a asp-controller="Post" asp-action="Create" class="@((ViewData["Title"]?.ToString() == "Utwórz post") ? "active" : "")">
+                    <i class="bi bi-plus-square"></i> Utwórz post
                 </a>
-                <a asp-controller="UserManagement" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "User Management") ? "active" : "")">
-                    <i class="bi bi-people"></i> Users
+                <a asp-controller="UserManagement" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Użytkownicy") ? "active" : "")">
+                    <i class="bi bi-people"></i> Użytkownicy
                 </a>
             }
 
-            <a asp-controller="Home" asp-action="Privacy" class="@((ViewData["Title"]?.ToString() == "Privacy") ? "active" : "")">
-                <i class="bi bi-shield-lock"></i> Privacy
+            <a asp-controller="Home" asp-action="Privacy" class="@((ViewData["Title"]?.ToString() == "Prywatność") ? "active" : "")">
+                <i class="bi bi-shield-lock"></i> Prywatność
             </a>
         </nav>
 
@@ -46,14 +46,14 @@
                 <form asp-controller="Account" asp-action="Logout" method="post" class="w-100 mb-2">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-outline-danger w-100">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> Wyloguj
                     </button>
                 </form>
             }
             else
             {
                 <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-box-arrow-in-right"></i> Login
+                    <i class="bi bi-box-arrow-in-right"></i> Zaloguj
                 </a>
             }
         </div>
@@ -65,14 +65,15 @@
         </main>
     </div>
 
-    @await RenderSectionAsync("Scripts", required: false)
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
     <footer class="border-top footer text-muted mt-auto">
         <div class="container">
-            &copy; 2025 - University-Portal - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - University-Portal - <a asp-controller="Home" asp-action="Privacy">Prywatność</a>
         </div>
     </footer>
 </body>

@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<University_Portal.Models.Event>
 
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Panel Administratora";
 }
 
 @Html.AntiForgeryToken()
@@ -12,7 +12,18 @@
 
 <div id="pageWrapper">
 
-    <h3 class="mb-4">Events</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Zarządzaj wydarzeniami</h3>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-primary shadow-sm"
+               asp-controller="Admin"
+               asp-action="CreateEvent">
+                + Utwórz wydarzenie
+            </a>
+        }
+    </div>
 
     @if (Model.Any())
     {
@@ -27,7 +38,7 @@
                         @if (!string.IsNullOrEmpty(ev.ImagePath))
                         {
                             <img src="~/@ev.ImagePath"
-                                 alt="Event Image"
+                                 alt="Zdjęcie eventu"
                                  class="card-img-top"
                                  style="height:350px;object-fit:cover;border-radius:.6rem .6rem 0 0;"
                                  onerror="this.onerror=null;this.src='/images/no-image.png';" />
@@ -36,28 +47,22 @@
                         {
                             <div class="bg-light d-flex align-items-center justify-content-center"
                                  style="height:350px;border-radius:.6rem .6rem 0 0;">
-                                <span class="text-muted">No Image</span>
+                                <span class="text-muted">Brak zdjęcia</span>
                             </div>
                         }
 
                         <div class="card-body d-flex flex-column p-4">
 
-                            <h4 class="text-center mb-3 fw-bold">
-                                @ev.Title
-                            </h4>
+                            <h4 class="text-center mb-3 fw-bold">@ev.Title</h4>
 
-                            <div class="text-muted mb-3"
-                                 style="min-height:70px;">
+                            <div class="text-muted mb-3" style="min-height:70px;">
                                 @ev.Description
                             </div>
 
                             <p class="mt-auto mb-0">
-                                <strong>Date:</strong>
-                                @ev.Date.ToString("dd-MM-yyyy HH:mm")<br />
-                                <strong>Location:</strong>
-                                @ev.Location<br />
-                                <strong>Max Participants:</strong>
-                                @ev.MaxParticipants
+                                <strong>Data:</strong> @ev.Date.ToString("dd-MM-yyyy HH:mm")<br />
+                                <strong>Lokalizacja:</strong> @ev.Location<br />
+                                <strong>Maks. uczestników:</strong> @ev.MaxParticipants
                             </p>
 
                         </div>
@@ -67,12 +72,12 @@
                             <a asp-action="EditEvent"
                                asp-route-id="@ev.Id"
                                class="btn btn-info text-white px-4">
-                                View
+                                Zobacz
                             </a>
 
                             <button class="btn btn-danger px-4 open-delete"
                                     data-event-id="@ev.Id">
-                                Delete
+                                Usuń
                             </button>
 
                         </div>
@@ -85,24 +90,23 @@
     else
     {
         <div class="alert alert-info">
-            No events created yet.
+            Brak utworzonych eventów.
         </div>
     }
 
 </div>
 
-<!-- DELETE OVERLAY -->
 <div id="deleteOverlay" class="delete-overlay">
     <div class="delete-modal shadow rounded-4">
-        <h5 class="fw-bold mb-2">Delete event?</h5>
-        <p class="text-muted mb-4">This action cannot be undone.</p>
+        <h5 class="fw-bold mb-2">Usuń event?</h5>
+        <p class="text-muted mb-4">Ta akcja jest nieodwracalna.</p>
 
         <div class="d-flex justify-content-end gap-2">
-            <button id="cancelDelete" class="btn btn-secondary">
-                Cancel
+            <button id="cancelDelete" class="btn btn-secondary px-4">
+                Anuluj
             </button>
             <button id="confirmDelete" class="btn btn-danger px-4">
-                Delete
+                Usuń
             </button>
         </div>
     </div>
@@ -111,7 +115,6 @@
 @section Scripts {
     <script>
         $(function () {
-
             let selectedEventId = null;
 
             function csrf() {
@@ -119,7 +122,6 @@
             }
 
             window.showToast = function (success, message) {
-
                 const toastId = "toast_" + Date.now();
                 const typeClass = success ? "bg-success" : "bg-danger";
 
@@ -127,7 +129,7 @@
                     <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" style="cursor:pointer;">
                         <div class="toast-header ${typeClass} text-white border-0">
                             <strong class="me-auto">
-                                ${success ? "Success" : "Error"}
+                                ${success ? "Sukces" : "Błąd"}
                             </strong>
                             <button type="button" class="btn-close btn-close-white"></button>
                         </div>
@@ -147,18 +149,20 @@
                     toast.fadeOut(300, () => toast.remove());
                 }, 5000);
             };
+
             $(".open-delete").click(function () {
                 selectedEventId = $(this).data("event-id");
                 $("#deleteOverlay").addClass("active");
                 $("#pageWrapper").addClass("blurred");
             });
+
             $("#cancelDelete").click(function () {
                 selectedEventId = null;
                 $("#deleteOverlay").removeClass("active");
                 $("#pageWrapper").removeClass("blurred");
             });
-            $("#confirmDelete").click(function () {
 
+            $("#confirmDelete").click(function () {
                 if (!selectedEventId) return;
 
                 const btn = $(this);
@@ -171,40 +175,24 @@
                     data: { id: selectedEventId },
 
                     success: function (res) {
-
-                        showToast(true, res.message ?? "Event deleted successfully.");
+                        showToast(true, res.message ?? "Event został usunięty.");
 
                         const card = $(`.event-card[data-event-id='${selectedEventId}']`);
-
-                        card.css({
-                            "transition": "all 0.3s ease",
-                            "opacity": "0",
-                            "transform": "scale(0.95)"
-                        });
+                        card.css({ "transition": "all 0.3s ease", "opacity": "0", "transform": "scale(0.95)" });
 
                         setTimeout(() => {
                             card.remove();
-
                             if ($(".event-card").length === 0) {
-                                $(".row").html(`
-                                    <div class="alert alert-info">
-                                        No events created yet.
-                                    </div>
-                                `);
+                                $(".row").html(`<div class="alert alert-info">Brak utworzonych eventów.</div>`);
                             }
-
                         }, 300);
 
                         $("#deleteOverlay").removeClass("active");
                         $("#pageWrapper").removeClass("blurred");
-
                     },
 
                     error: function (xhr) {
-                        showToast(false,
-                            xhr.responseJSON?.message ??
-                            "An error occurred while deleting the event."
-                        );
+                        showToast(false, xhr.responseJSON?.message ?? "Wystąpił błąd podczas usuwania eventu.");
                     },
 
                     complete: function () {
@@ -212,7 +200,6 @@
                         selectedEventId = null;
                     }
                 });
-
             });
 
         });
