@@ -156,14 +156,14 @@
                 const typeClass = success ? "bg-success" : "bg-danger";
 
                 const toastHtml = `
-                                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
-                                        <div class="toast-header ${typeClass} text-white border-0">
-                                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
-                                            <button type="button" class="btn-close btn-close-white"></button>
-                                        </div>
-                                        <div class="toast-body">${message}</div>
-                                    </div>
-                                `;
+                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                        <div class="toast-header ${typeClass} text-white border-0">
+                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                            <button type="button" class="btn-close btn-close-white"></button>
+                        </div>
+                        <div class="toast-body">${message}</div>
+                    </div>
+                `;
                 $("#toastContainer").append(toastHtml);
 
                 const toast = $("#" + toastId);
@@ -214,24 +214,12 @@
                     headers: { 'RequestVerificationToken': getCsrfToken() },
                     data: { name: name },
                     success: function (res) {
-                        console.log("AJAX response:", res);
-
                         if (res.success) {
-                            showToast(true, res.message || "Kategoria utworzona pomyślnie");
+                            showToast(true, res.message);
 
-                            const newCategory = `
-                                                <a href="/Post?categoryId=${res.id}"
-                                                   class="badge rounded-pill px-3 py-2 me-2 category-badge bg-warning text-dark">
-                                                    ${res.name}
-                                                </a>
-                                            `;
-                            $("#categoryContainer").append(newCategory);
-                            $("#categoryName").val("");
-                            $("#categoryModal").removeClass("active");
-                        } else if (res.error) {
-                            showToast(false, res.error);
+                            window.location.href = "/Post/Index?categoryId=" + res.id;
                         } else {
-                            showToast(false, "Wystąpił nieznany błąd");
+                            showToast(false, res.message || "Wystąpił nieznany błąd");
                         }
                     },
                     error: function () {
@@ -271,7 +259,7 @@
                             $(`.delete-category-btn[data-category-id='${categoryToDeleteId}']`).closest(".badge-wrapper").remove();
                             showToast(true, "Kategoria została usunięta.");
                         } else {
-                            showToast(false, res.error || "Nie udało się usunąć kategorii.");
+                            showToast(false, res.message || "Nie udało się usunąć kategorii.");
                         }
                         $("#deleteCategoryOverlay").removeClass("active");
                         $("#pageWrapper").removeClass("blurred");

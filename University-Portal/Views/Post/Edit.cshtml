@@ -19,7 +19,9 @@
 
         <hr />
 
-        <form asp-controller="Post"
+        <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1055;"></div>
+
+        <form id="postForm" asp-controller="Post"
               asp-action="Edit"
               method="post"
               enctype="multipart/form-data">
@@ -69,15 +71,8 @@
             </div>
 
             <div class="btn-group-actions">
-                <button type="submit" class="btn btn-primary">
-                    Save
-                </button>
-
-                <a asp-action="Index"
-                   asp-controller="Post"
-                   class="btn btn-secondary">
-                    Cancel
-                </a>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" asp-controller="Post" class="btn btn-secondary">Cancel</a>
             </div>
 
         </form>
@@ -89,8 +84,7 @@
 
     <script src="https://cdn.tiny.cloud/1/03ew85vdd7hum4szd9dfz4wnix6lomyle1v1hlr2coxod5o3/tinymce/8/tinymce.min.js"
             referrerpolicy="origin"
-            crossorigin="anonymous">
-    </script>
+            crossorigin="anonymous"></script>
 
     <script>
         tinymce.init({
@@ -101,6 +95,61 @@
             toolbar: 'undo redo | bold italic underline | bullist numlist | link | code',
             branding: false
         });
-    </script>
 
+        window.showToast = function (success, message) {
+            const toastId = "toast_" + Date.now();
+            const typeClass = success ? "bg-success" : "bg-danger";
+
+            const toastHtml = `
+                        <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                            <div class="toast-header ${typeClass} text-white border-0">
+                                <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                <button type="button" class="btn-close btn-close-white"></button>
+                            </div>
+                            <div class="toast-body">${message}</div>
+                        </div>
+                    `;
+            $("#toastContainer").append(toastHtml);
+
+            const toast = $("#" + toastId);
+            toast.on("click", function () {
+                toast.fadeOut(300, () => toast.remove());
+            });
+
+            setTimeout(() => {
+                toast.fadeOut(300, () => toast.remove());
+            }, 10000);
+        };
+        $(function () {
+            $("#postForm").submit(function (e) {
+                e.preventDefault();
+                tinymce.triggerSave(); 
+
+                const formData = new FormData(this);
+                const url = $(this).attr("action");
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    success: function (res) {
+                        if (res.success) {
+                            showToast(true, res.message);
+                            if (res.redirectUrl) {
+                                setTimeout(() => window.location.href = res.redirectUrl, 1200);
+                            }
+                        } else {
+                            showToast(false, res.error || "Wystąpił nieznany błąd");
+                        }
+                    },
+                    error: function () {
+                        showToast(false, "Błąd serwera");
+                    }
+                });
+            });
+        });
+    </script>
 }

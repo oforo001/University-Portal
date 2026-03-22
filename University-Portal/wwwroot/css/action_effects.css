@@ -1,159 +1,4 @@
-﻿
-
-.delete-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
-    z-index: 1055;
-}
-
-    .delete-overlay.active {
-        opacity: 1;
-        visibility: visible;
-    }
-
-
-.delete-modal {
-    background: #ffffff;
-    width: 440px;
-    max-width: 92%;
-    padding: 2.25rem 2rem;
-    text-align: center;
-    border-radius: 1.25rem;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18);
-    transform: translateY(-10px) scale(0.96);
-    transition: transform 0.25s ease;
-}
-
-.delete-overlay.active .delete-modal {
-    transform: translateY(0) scale(1);
-}
-
-
-.delete-icon {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto 1.25rem auto;
-    border-radius: 50%;
-    background: rgba(220, 53, 69, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .delete-icon i {
-        font-size: 26px;
-        color: #dc3545;
-    }
-
-
-
-.delete-modal .button-group {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 18px; 
-    margin-top: 2rem; 
-}
-
-    .delete-modal .button-group .btn {
-        min-width: 120px;
-        height: 42px;
-        padding: 0 20px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 500;
-        border-radius: 8px;
-    }
-
-.delete-modal .btn-outline-secondary {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-}
-
-/* Improve Delete button depth */
-.delete-modal .btn-danger {
-    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
-}
-
-
-
-
-#pageWrapper.blurred {
-    filter: blur(4px);
-    pointer-events: none;
-    transition: filter 0.25s ease;
-}
-
-
-
-.table th {
-    background-color: #f7f7f7;
-}
-
-.table th,
-.table td {
-    padding: 12px;
-    text-align: center;
-}
-
-.table tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-
-.badge {
-    font-size: 0.85rem;
-}
-
-    .badge.bg-success {
-        background-color: #28a745;
-    }
-
-    .badge.bg-danger {
-        background-color: #dc3545;
-    }
-
-
-
-.btn-link:hover {
-    text-decoration: none;
-}
-
-.dropdown-item:hover {
-    background-color: #f8f9fa;
-}
-
-
-
-.modal-backdrop.show {
-    opacity: 0.65;
-    backdrop-filter: blur(6px);
-}
-
-.modal-content {
-    border-radius: 1.25rem;
-}
-
-.modal.fade .modal-dialog {
-    transform: scale(0.96);
-    transition: transform 0.2s ease-out;
-}
-
-.modal.show .modal-dialog {
-    transform: scale(1);
-}
-
-
-
+﻿/* TOASTS */
 .toast-container {
     position: fixed;
     top: 1.5rem;
@@ -211,8 +56,6 @@
     color: #6c757d;
 }
 
-
-
 @keyframes slideIn {
     from {
         transform: translateX(30px);
@@ -223,4 +66,107 @@
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+/* DELETE OVERLAY */
+.delete-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center; /* center horizontally and vertically */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 1055;
+}
+
+    .delete-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+.delete-modal {
+    background: #ffffff;
+    width: 440px;
+    max-width: 92%;
+    padding: 2.25rem 2rem;
+    text-align: center;
+    border-radius: 1.25rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18);
+    transform: translateY(-10px) scale(0.96);
+    transition: transform 0.25s ease;
+}
+
+.delete-overlay.active .delete-modal {
+    transform: translateY(0) scale(1);
+}
+
+/* Delete modal buttons centered */
+.delete-modal .d-flex.justify-content-end.gap-2 {
+    justify-content: center !important;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Blur page behind overlay */
+#pageWrapper.blurred {
+    filter: blur(4px);
+    pointer-events: none;
+    transition: filter 0.25s ease;
+}
+
+/* Card / Table / Badge styling (optional enhancements) */
+.table th {
+    background-color: #f7f7f7;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    text-align: center;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.badge {
+    font-size: 0.85rem;
+}
+
+    .badge.bg-success {
+        background-color: #28a745;
+    }
+
+    .badge.bg-danger {
+        background-color: #dc3545;
+    }
+
+.btn-link:hover {
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.modal-backdrop.show {
+    opacity: 0.65;
+    backdrop-filter: blur(6px);
+}
+
+.modal-content {
+    border-radius: 1.25rem;
+}
+
+.modal.fade .modal-dialog {
+    transform: scale(0.96);
+    transition: transform 0.2s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
 }
