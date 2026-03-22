@@ -1,18 +1,20 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using University_Portal.AppServices.Blog;
 using University_Portal.Data;
 using University_Portal.Models;
 
-namespace University_Portal.Controllers
+namespace University_Portal.Controllers.Admin
 {
+    [Authorize(Roles="Admin")]
     public class CategoryController : Controller
     {
         private readonly ApplicationContext _context;
 
         public CategoryController(ApplicationContext context)
         {
-            _context=context;
+            _context = context;
         }
 
         [HttpPost]

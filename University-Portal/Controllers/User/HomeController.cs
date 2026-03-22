@@ -10,6 +10,7 @@ using University_Portal.AppServices.Events;
 
 namespace University_Portal.Controllers.User
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
