@@ -1,5 +1,4 @@
-﻿/* TOASTS */
-.toast-container {
+﻿.toast-container {
     position: fixed;
     top: 1.5rem;
     right: 1.5rem;
@@ -68,7 +67,7 @@
     }
 }
 
-/* DELETE OVERLAY */
+
 .delete-overlay {
     position: fixed;
     inset: 0;
@@ -76,7 +75,7 @@
     backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
-    justify-content: center; /* center horizontally and vertically */
+    justify-content: center;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -104,21 +103,33 @@
     transform: translateY(0) scale(1);
 }
 
-/* Delete modal buttons centered */
 .delete-modal .d-flex.justify-content-end.gap-2 {
     justify-content: center !important;
     gap: 1rem;
     margin-top: 1.5rem;
 }
 
-/* Blur page behind overlay */
 #pageWrapper.blurred {
     filter: blur(4px);
     pointer-events: none;
     transition: filter 0.25s ease;
 }
 
-/* Card / Table / Badge styling (optional enhancements) */
+
+.card {
+    min-height: 320px;
+}
+
+.table tbody {
+    min-height: 220px;
+}
+
+.table-responsive {
+    min-height: 260px;
+}
+
+
+
 .table th {
     background-color: #f7f7f7;
 }
@@ -133,6 +144,7 @@
     background-color: #f1f1f1;
 }
 
+
 .badge {
     font-size: 0.85rem;
 }
@@ -145,6 +157,7 @@
         background-color: #dc3545;
     }
 
+
 .btn-link:hover {
     text-decoration: none;
 }
@@ -152,6 +165,8 @@
 .dropdown-item:hover {
     background-color: #f8f9fa;
 }
+
+
 
 .modal-backdrop.show {
     opacity: 0.65;

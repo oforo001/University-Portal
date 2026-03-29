@@ -63,19 +63,13 @@
                             <td class="text-end">
                                 <div class="dropdown">
                                     <button class="btn btn-link text-dark p-0"
-                                            data-bs-toggle="dropdown">
+                                            data-bs-toggle="dropdown"
+                                            data-bs-boundary="viewport"
+                                            data-bs-display="static">
                                         <i class="bi bi-three-dots-vertical fs-5"></i>
                                     </button>
 
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-
-                                        <li>
-                                            <a class="dropdown-item"
-                                               asp-action="Edit"
-                                               asp-route-id="@user.Id">
-                                                <i class="bi bi-pencil me-2"></i>Edytuj
-                                            </a>
-                                        </li>
 
                                         <li><hr class="dropdown-divider" /></li>
 
@@ -213,6 +207,12 @@
             <button id="confirmDelete" class="btn btn-danger px-4">Usuń</button>
         </div>
     </div>
+</div>
+
+<div class="table-pagination d-flex justify-content-between align-items-center mt-3">
+    <button id="prevUserPage" class="btn btn-outline-primary" disabled>← Poprzednia</button>
+    <span id="userPageInfo">Strona 1</span>
+    <button id="nextUserPage" class="btn btn-outline-primary">Następna →</button>
 </div>
 
 @section Scripts {
@@ -355,6 +355,56 @@
                 });
             });
 
+        });
+        $(document).ready(function () {
+            const rowsPerPage = 10;
+            let currentPage = 1;
+
+            function showUserPage(page) {
+                const rows = $("#pageWrapper table tbody tr");
+                const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+                if (rows.length === 0) {
+                    $(".table-pagination").hide();
+                    return;
+                } else {
+                    $(".table-pagination").show();
+                }
+
+                rows.hide();
+                const start = (page - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                rows.slice(start, end).show();
+
+                $("#userPageInfo").text(`Strona ${page} z ${totalPages}`);
+                $("#prevUserPage").prop("disabled", page === 1);
+                $("#nextUserPage").prop("disabled", page === totalPages);
+            }
+
+            $("#prevUserPage").click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    showUserPage(currentPage);
+                }
+            });
+
+            $("#nextUserPage").click(function () {
+                const totalRows = $("#pageWrapper table tbody tr").length;
+                const totalPages = Math.ceil(totalRows / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    showUserPage(currentPage);
+                }
+            });
+
+            showUserPage(currentPage);
+
+            $(document).on("DOMNodeInserted", "#pageWrapper table tbody", function () {
+                const totalRows = $("#pageWrapper table tbody tr").length;
+                const totalPages = Math.ceil(totalRows / rowsPerPage);
+                if (currentPage > totalPages) currentPage = totalPages;
+                showUserPage(currentPage);
+            });
         });
     </script>
 }

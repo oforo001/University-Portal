@@ -1,4 +1,20 @@
-﻿body {
+﻿.custom-blue-table thead {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.custom-blue-table tbody tr:nth-child(odd) {
+    background-color: #e7f1ff;
+}
+
+.custom-blue-table tbody tr:hover {
+    background-color: #b6d4fe; 
+}
+
+.custom-blue-table td a {
+    color: #0a58ca;
+}
+body {
     background-color: #f5f7fa;
     font-family: sans-serif;
 }

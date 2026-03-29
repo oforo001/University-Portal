@@ -16,7 +16,7 @@
     <div class="side-menu">
         <nav>
             <a asp-controller="Home" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Strona główna") ? "active" : "")">
-                <i class="bi bi-house"></i> Strona główna
+                <i class="bi bi-house"></i> Wydarzenia
             </a>
             <a asp-controller="Post" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Blog") ? "active" : "")">
                 <i class="bi bi-journal-text"></i> Blog
@@ -25,7 +25,7 @@
             @if (User.IsInRole("Admin"))
             {
                 <a asp-controller="Admin" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Zarządzaj eventami") ? "active" : "")">
-                    <i class="bi bi-calendar-event"></i> Zarządzaj eventami
+                    <i class="bi bi-calendar-event"></i> Zarządzaj wydarzeniami
                 </a>
                 <a asp-controller="Post" asp-action="Create" class="@((ViewData["Title"]?.ToString() == "Utwórz post") ? "active" : "")">
                     <i class="bi bi-plus-square"></i> Utwórz post

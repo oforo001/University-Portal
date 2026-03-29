@@ -41,20 +41,29 @@ namespace University_Portal.Controllers.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent(EventCreateViewModel model)
         {
-            ModelState.Remove("ImagePath"); 
-            ModelState.Remove("Image"); 
+            ModelState.Remove("ImagePath");
+            ModelState.Remove("Image");
 
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return Unauthorized();
 
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToArray();
+
+                return BadRequest(new { message = string.Join("<br/>", errors) });
+            }
             var createEventResult = await EventClient.CreateEventAsync(_context, user.Id, model, _env);
-            TempData[createEventResult.Success ? "Success" : "Error"] = createEventResult.Message;
-            return RedirectToAction(nameof(Index));
+
+            if (!createEventResult.Success)
+            {
+                return BadRequest(new { message = createEventResult.Message });
+            }
+            return Ok(new { message = createEventResult.Message });
         }
         [HttpGet]
         public async Task<IActionResult> EditEvent(int id)
@@ -69,9 +78,9 @@ namespace University_Portal.Controllers.Admin
                 .Select(r => new RegisteredUser
                 {
                     UserId = r.User.Id,
-                    UserName = r.User.UserName,
+                    FullName = r.User.FullName,
                     Email = r.User.Email,
-                    RegisteredAt = r.RegisteredAt
+                    RegisteredAt = r.RegisteredAt.ToLocalTime(),
                 })
                 .ToListAsync();
 
