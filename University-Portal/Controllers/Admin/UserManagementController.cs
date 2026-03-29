@@ -73,7 +73,7 @@ namespace University_Portal.Controllers.Admin
                 Email = model.Email,
                 FullName = model.FullName,
                 IsActive = model.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);

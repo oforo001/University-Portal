@@ -1,7 +1,7 @@
 ﻿@model University_Portal.ViewModels.AdminViewModels.EventCreateViewModel
 
 @{
-    ViewData["Title"] = "Edit Event";
+    ViewData["Title"] = "Edytuj wydarzenie";
 }
 
 <link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
@@ -12,7 +12,7 @@
         <div class="page-header">
             <h2>@ViewData["Title"]</h2>
             <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
-                Back to Events
+                Powrót do wydarzeń
             </a>
         </div>
 
@@ -30,13 +30,13 @@
 
             <div class="form-group">
                 <label asp-for="Title" class="form-label"></label>
-                <input asp-for="Title" class="form-control" placeholder="Event Title" />
+                <input asp-for="Title" class="form-control" placeholder="Tytuł wydarzenia" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the event"></textarea>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Opisz wydarzenie"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
@@ -51,7 +51,7 @@
 
             <div class="form-group">
                 <label asp-for="Location" class="form-label"></label>
-                <input asp-for="Location" class="form-control" placeholder="Building, room, or online link" />
+                <input asp-for="Location" class="form-control" placeholder="Budynek, sala lub link online" />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
 
@@ -65,29 +65,29 @@
                 @if (!string.IsNullOrEmpty(Model.ImagePath))
                 {
                     <div class="mb-2">
-                        <label class="form-label">Current Image</label><br />
+                        <label class="form-label">Aktualne zdjęcie</label><br />
                         <img src="~/@Model.ImagePath" style="max-width:220px; border-radius:8px;" />
                     </div>
                 }
 
-                <label asp-for="Image" class="form-label">Upload New Image (optional)</label>
+                <label asp-for="Image" class="form-label">Prześlij nowe zdjęcie (opcjonalnie)</label>
                 <input asp-for="Image"
                        type="file"
                        class="form-control"
                        accept=".jpg,.jpeg,.png,.gif" />
                 <span asp-validation-for="Image" class="text-danger"></span>
                 <small class="form-text text-muted">
-                    Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB.
+                    Dozwolone formaty: .jpg, .jpeg, .png, .gif. Maksymalny rozmiar 4 MB.
                 </small>
             </div>
 
             <div class="btn-group-actions">
                 <button type="submit" id="submitBtn" class="btn btn-primary">
-                    Update
+                    Aktualizuj
                 </button>
 
                 <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">
-                    Cancel
+                    Anuluj
                 </a>
             </div>
         </form>
@@ -95,32 +95,37 @@
         @if (Model.RegisteredUsers?.Any() == true)
         {
             <div class="mt-5">
-                <h4>Registered Users</h4>
-                <table class="table table-bordered table-hover mt-3">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>User Name</th>
-                            <th>Email</th>
-                            <th>Registered At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
-                        {
-                            var user = Model.RegisteredUsers[i];
+                <h4 class="mb-3">Zarejestrowani użytkownicy</h4>
+                <div class="table-responsive shadow-sm rounded-3">
+                    <table class="table align-middle mb-0 custom-blue-table">
+                        <thead>
                             <tr>
-                                <td>@(i + 1)</td>
-                                <td>@user.UserName</td>
-                                <td>@user.Email</td>
-                                <td>@user.RegisteredAt.ToString("dd-MM-yyyy HH:mm")</td>
+                                <th scope="col"></th>
+                                <th scope="col">Nazwa użytkownika</th>
+                                <th scope="col">E-mail</th>
+                                <th scope="col">Zarejestrowano</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
+                            {
+                                var user = Model.RegisteredUsers[i];
+                                <tr>
+                                    <th scope="row">@((i + 1))</th>
+                                    <td>@user.FullName</td>
+                                    <td><a href="mailto:@user.Email" class="text-decoration-none">@user.Email</a></td>
+                                    <td>
+                                        <span class="badge bg-primary rounded-pill">
+                                            @user.RegisteredAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         }
-    </div>
 </div>
 
 @section Scripts {
@@ -136,7 +141,7 @@
                 if (!$(form).valid()) return;
 
                 btn.disabled = true;
-                btn.innerText = "Updating...";
+                btn.innerText = "Aktualizowanie...";
 
                 const formData = new FormData(form);
 
@@ -150,14 +155,14 @@
                         window.location.href = "/Admin/Index";
                     } else {
                         const error = await response.json();
-                        alert(error.message || "Update failed.");
+                        alert(error.message || "Aktualizacja nie powiodła się.");
                         btn.disabled = false;
-                        btn.innerText = "Update";
+                        btn.innerText = "Aktualizuj";
                     }
                 } catch (err) {
-                    alert("Unexpected error occurred.");
+                    alert("Wystąpił nieoczekiwany błąd.");
                     btn.disabled = false;
-                    btn.innerText = "Update";
+                    btn.innerText = "Aktualizuj";
                 }
             });
     </script>

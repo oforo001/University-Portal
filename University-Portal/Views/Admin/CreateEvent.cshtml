@@ -1,7 +1,7 @@
 ﻿@model University_Portal.ViewModels.AdminViewModels.EventCreateViewModel
 
 @{
-    ViewData["Title"] = "Create Event";
+    ViewData["Title"] = "Utwórz wydarzenie";
 }
 
 <link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
@@ -14,7 +14,7 @@
             <a asp-controller="Admin"
                asp-action="Index"
                class="btn btn-outline-secondary">
-                Back to Events
+                Powrót do wydarzeń
             </a>
         </div>
 
@@ -33,7 +33,7 @@
                 <label asp-for="Title" class="form-label"></label>
                 <input asp-for="Title"
                        class="form-control"
-                       placeholder="Event Title" />
+                       placeholder="Tytuł wydarzenia" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
@@ -42,7 +42,7 @@
                 <textarea asp-for="Description"
                           class="form-control"
                           rows="4"
-                          placeholder="Describe the event"></textarea>
+                          placeholder="Opisz wydarzenie"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
@@ -58,7 +58,7 @@
                 <label asp-for="Location" class="form-label"></label>
                 <input asp-for="Location"
                        class="form-control"
-                       placeholder="Building, room, or online link" />
+                       placeholder="Budynek, sala lub link online" />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
 
@@ -71,7 +71,6 @@
                 <span asp-validation-for="MaxParticipants" class="text-danger"></span>
             </div>
 
-
             <div class="form-group">
                 <label asp-for="Image" class="form-label"></label>
                 <input asp-for="Image"
@@ -80,19 +79,19 @@
                        class="form-control" />
                 <span asp-validation-for="Image" class="text-danger"></span>
                 <small class="form-text text-muted">
-                    Allowed formats: .jpg, .jpeg, .png, .gif. Max 4 MB.
+                    Dozwolone formaty: .jpg, .jpeg, .png, .gif. Maksymalny rozmiar 4 MB.
                 </small>
             </div>
 
             <div class="btn-group-actions">
                 <button type="submit" class="btn btn-primary">
-                    Create
+                    Utwórz
                 </button>
 
                 <a asp-controller="Admin"
                    asp-action="Index"
                    class="btn btn-secondary">
-                    Cancel
+                    Anuluj
                 </a>
             </div>
 
@@ -100,6 +99,81 @@
     </div>
 </div>
 
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            function csrf() {
+                return $('input[name="__RequestVerificationToken"]').val();
+            }
+
+            window.showToast = function (success, message) {
+                const toastId = "toast_" + Date.now();
+                const typeClass = success ? "bg-success" : "bg-danger";
+
+                const toastHtml = `
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                                <div class="toast-header ${typeClass} text-white border-0">
+                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                    <button type="button" class="btn-close btn-close-white"></button>
+                                </div>
+                                <div class="toast-body">${message}</div>
+                            </div>
+                        `;
+
+                $("#toastContainer").append(toastHtml);
+                const toast = $("#" + toastId);
+
+                toast.on("click", function () { toast.fadeOut(300, () => toast.remove()); });
+                setTimeout(() => { toast.fadeOut(300, () => toast.remove()); }, 10000);
+            };
+
+            $("form").submit(function (e) {
+                e.preventDefault();
+
+                const form = $(this);
+                const btn = form.find("button[type='submit']");
+                btn.prop("disabled", true);
+
+                const formData = new FormData(this);
+
+                $.ajax({
+                    type: form.attr("method"),
+                    url: form.attr("action"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': csrf() },
+
+                    success: function (res) {
+                        showToast(true, res.message ?? "Wydarzenie zostało utworzone.");
+                        setTimeout(() => { window.location.href = '@Url.Action("Index", "Admin")'; }, 1000);
+                    },
+
+                    error: function (xhr) {
+                        if (xhr.responseJSON?.message) {
+                            showToast(false, xhr.responseJSON.message);
+                        } else {
+                            // fallback: pokaż wszystkie błędy walidacji
+                            const errors = [];
+                            form.find("span.text-danger").each(function () {
+                                const text = $(this).text().trim();
+                                if (text) errors.push(text);
+                            });
+                            if (errors.length > 0) {
+                                errors.forEach(err => showToast(false, err));
+                            } else {
+                                showToast(false, "Wystąpił błąd podczas tworzenia wydarzenia.");
+                            }
+                        }
+                    },
+
+                    complete: function () {
+                        btn.prop("disabled", false);
+                    }
+                });
+            });
+        });
+    </script>
 }

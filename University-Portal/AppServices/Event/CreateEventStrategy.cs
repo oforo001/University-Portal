@@ -22,6 +22,10 @@ namespace University_Portal.AppServices.Event
             if (env == null)
                 return (false, "Środowisko aplikacji nie jest dostępne.");
 
+            if(model.Date < DateTime.Now)
+                return (false, "Nie można utworzyć wydarzenia z datą w przeszłości.");
+
+
             // Validate image
             string imagePath = null;
             if (model.Image != null && model.Image.Length > 0)
