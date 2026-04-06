@@ -13,51 +13,44 @@
 </head>
 
 <body>
-    <div class="side-menu">
-        <nav>
-            <a asp-controller="Home" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Strona główna") ? "active" : "")">
-                <i class="bi bi-house"></i> Wydarzenia
-            </a>
-            <a asp-controller="Post" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Blog") ? "active" : "")">
-                <i class="bi bi-journal-text"></i> Blog
-            </a>
 
-            @if (User.IsInRole("Admin"))
-            {
-                <a asp-controller="Admin" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Zarządzaj eventami") ? "active" : "")">
-                    <i class="bi bi-calendar-event"></i> Zarządzaj wydarzeniami
-                </a>
-                <a asp-controller="Post" asp-action="Create" class="@((ViewData["Title"]?.ToString() == "Utwórz post") ? "active" : "")">
-                    <i class="bi bi-plus-square"></i> Utwórz post
-                </a>
-                <a asp-controller="UserManagement" asp-action="Index" class="@((ViewData["Title"]?.ToString() == "Użytkownicy") ? "active" : "")">
-                    <i class="bi bi-people"></i> Użytkownicy
-                </a>
-            }
+    <nav class="navbar navbar-dark bg-dark d-lg-none px-3">
+        <button class="btn btn-outline-light"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#mobileMenu">
+            <i class="bi bi-list"></i>
+        </button>
 
-            <a asp-controller="Home" asp-action="Privacy" class="@((ViewData["Title"]?.ToString() == "Prywatność") ? "active" : "")">
-                <i class="bi bi-shield-lock"></i> Prywatność
-            </a>
-        </nav>
+        <span class="navbar-brand mb-0 h5">
+            University Portal
+        </span>
+    </nav>
 
-        <div class="login-section mt-auto">
-            @if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                <form asp-controller="Account" asp-action="Logout" method="post" class="w-100 mb-2">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-danger w-100">
-                        <i class="bi bi-box-arrow-right"></i> Wyloguj
-                    </button>
-                </form>
-            }
-            else
-            {
-                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-box-arrow-in-right"></i> Zaloguj
-                </a>
-            }
+
+    <div class="offcanvas offcanvas-start"
+         tabindex="-1"
+         id="mobileMenu">
+
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Menu</h5>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="offcanvas">
+            </button>
         </div>
+
+        <div class="offcanvas-body">
+            @await Html.PartialAsync("_SideMenu")
+        </div>
+
     </div>
+
+    <div class="side-menu d-none d-lg-flex">
+        @await Html.PartialAsync("_SideMenu")
+    </div>
+
 
     <div class="content-wrapper">
         <main role="main" class="pb-3">
@@ -65,16 +58,22 @@
         </main>
     </div>
 
+
+    <footer class="border-top footer text-muted mt-auto">
+        <div class="container">
+            &copy; 2025 - University-Portal -
+            <a asp-controller="Home" asp-action="Privacy">
+                Prywatność
+            </a>
+        </div>
+    </footer>
+
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 
-    <footer class="border-top footer text-muted mt-auto">
-        <div class="container">
-            &copy; 2025 - University-Portal - <a asp-controller="Home" asp-action="Privacy">Prywatność</a>
-        </div>
-    </footer>
 </body>
 </html>

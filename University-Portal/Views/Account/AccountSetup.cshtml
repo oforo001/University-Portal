@@ -2,13 +2,13 @@
 @model RegisterViewModel
 
 @{
-    ViewData["Title"] = "Admin Setup";
+    ViewData["Title"] = "Konfiguracja administratora";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="account-container">
     <div class="account-box">
-        <h2 class="text-center mb-3 text-primary">Initial Administrator Setup</h2>
+        <h2 class="text-center mb-3 text-primary">Początkowa konfiguracja administratora</h2>
         @if (TempData["Success"] != null)
         {
             <div class="alert alert-success" role="alert">
@@ -22,43 +22,43 @@
             </div>
         }
         <div class="alert alert-info mb-4" role="alert">
-            <strong>Welcome!</strong> It looks like this is the first time the system is being used.<br />
-            No administrator account has been found yet. <br />
-            Please create the initial <strong>Admin</strong> account below — this user will have full access to system configuration and user management.
+            <strong>Witamy!</strong> Wygląda na to, że system jest używany po raz pierwszy.<br />
+            Nie znaleziono jeszcze konta administratora.<br />
+            Utwórz proszę poniżej początkowe konto <strong>Administratora</strong> — ten użytkownik będzie miał pełny dostęp do konfiguracji systemu i zarządzania użytkownikami.
         </div>
 
         <form asp-controller="Account" asp-action="AccountSetup" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="mb-3">
-                <label asp-for="Name" class="form-label">Full Name</label>
-                <input asp-for="Name" class="form-control" placeholder="Enter your full name" />
+                <label asp-for="Name" class="form-label">Pełne imię i nazwisko</label>
+                <input asp-for="Name" class="form-control" placeholder="Wpisz swoje pełne imię i nazwisko" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Email" class="form-label">Administrator Email</label>
+                <label asp-for="Email" class="form-label">Adres e-mail administratora</label>
                 <input asp-for="Email" class="form-control" placeholder="admin@example.com" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Password" class="form-label">Password</label>
-                <input asp-for="Password" class="form-control" placeholder="Enter a secure password" />
+                <label asp-for="Password" class="form-label">Hasło</label>
+                <input asp-for="Password" class="form-control" placeholder="Wpisz bezpieczne hasło" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
-                <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter your password" />
+                <label asp-for="ConfirmPassword" class="form-label">Potwierdź hasło</label>
+                <input asp-for="ConfirmPassword" class="form-control" placeholder="Wpisz ponownie hasło" />
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
             </div>
 
-            <input type="submit" value="Create Admin Account" class="btn btn-primary w-100" />
+            <input type="submit" value="Utwórz konto administratora" class="btn btn-primary w-100" />
 
             <div class="text-center mt-3">
                 <small class="text-muted">
-                    Once this account is created, the setup page will be disabled and you will be redirected to the login page.
+                    Po utworzeniu tego konta strona konfiguracji zostanie wyłączona, a Ty zostaniesz przekierowany na stronę logowania.
                 </small>
             </div>
         </form>
@@ -67,6 +67,7 @@
 
 @section Scripts {
     @{
+
         await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
     }
 }

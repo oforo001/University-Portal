@@ -1,9 +1,35 @@
 ﻿@model IEnumerable<University_Portal.ViewModels.Home.EventViewModel>
+@using University_Portal.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> UserManager
+@inject UserManager<University_Portal.Models.AppUser> UserManager
+
+
 @{
     ViewData["Title"] = "Nadchodzące wydarzenia";
     var registeredEventIds = ViewBag.RegisteredEventIds as List<int> ?? new List<int>();
 }
 <link rel="stylesheet" href="~/css/events.css" asp-append-version="true" />
+
+<div class="container mt-4">
+    @{
+        string fullName = "";
+        if (User.Identity.IsAuthenticated)
+        {
+            var appUser = await UserManager.GetUserAsync(User);
+            if (appUser != null)
+            {
+                fullName = appUser.FullName;
+            }
+        }
+    }
+
+    @if (!string.IsNullOrEmpty(fullName))
+    {
+        <h4 class="mb-3" style="text-align:left; font-weight:bold; color:black;">
+            Witaj, @fullName!
+        </h4>
+    }
 
 <div class="container mt-4">
     <h2 class="text-center mb-4">Nadchodzące wydarzenia</h2>

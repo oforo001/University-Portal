@@ -2,33 +2,33 @@
 @model VerifyEmailViewModel
 
 @{
-    ViewData["Title"] = "Verify Email";
+    ViewData["Title"] = "Weryfikacja e-mail";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <div class="account-container">
     <div class="account-box">
-        <h2 class="text-center mb-4">Verify Email</h2>
+        <h2 class="text-center mb-4">Weryfikacja e-mail</h2>
 
         <form id="verifyEmailForm" asp-action="VerifyEmailByRegistration" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
+                <label asp-for="Email" class="form-label">Adres e-mail</label>
                 <input asp-for="Email" class="form-control" readonly />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Token" class="form-label"></label>
-                <input asp-for="Token" class="form-control" maxlength="6" />
+                <label asp-for="Token" class="form-label">Kod weryfikacyjny</label>
+                <input asp-for="Token" class="form-control" maxlength="6" placeholder="Wpisz kod weryfikacyjny" />
                 <span asp-validation-for="Token" class="text-danger"></span>
             </div>
 
-            <input type="submit" value="Verify" class="btn btn-success w-100" />
+            <input type="submit" value="Zweryfikuj" class="btn btn-success w-100" />
 
             <div class="text-center mt-2">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Powrót</a>
             </div>
         </form>
 
@@ -50,16 +50,16 @@
                 const typeClass = success ? "bg-success" : "bg-danger";
 
                 const toastHtml = `
-                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
-                                <div class="toast-header ${typeClass} text-white border-0">
-                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
-                                    <button type="button" class="btn-close btn-close-white"></button>
-                                </div>
-                                <div class="toast-body">
-                                    ${message}
-                                </div>
-                            </div>
-                        `;
+                                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                                        <div class="toast-header ${typeClass} text-white border-0">
+                                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                            <button type="button" class="btn-close btn-close-white"></button>
+                                        </div>
+                                        <div class="toast-body">
+                                            ${message}
+                                        </div>
+                                    </div>
+                                `;
                 $("#toastContainer").append(toastHtml);
 
                 const toast = $("#" + toastId);
