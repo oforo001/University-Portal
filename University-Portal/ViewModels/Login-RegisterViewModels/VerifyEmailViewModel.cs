@@ -5,7 +5,7 @@ namespace University_Portal.ViewModels
     public class VerifyEmailViewModel
     {
         [StringLength(6, MinimumLength = 6)]
-        [Display(Name = "Verification Code")]
+        [Display(Name = "Kod weryfikacyjny")]
         public string? Token { get; set; }
 
         public string? Email { get; set; } 

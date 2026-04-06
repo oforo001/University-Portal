@@ -279,10 +279,10 @@ namespace University_Portal.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, errors = new[] { "Failed to send email: " + ex.Message } });
+                return Json(new { success = false, errors = new[] { "Nie udało się wysłać e-maila: " + ex.Message } });
             }
 
-            return Json(new { success = true, message = "Verification code resent successfully!" });
+            return Json(new { success = true, message = "Kod weryfikacyjny został pomyślnie wysłany ponownie!" });
         }
 
         [HttpPost]

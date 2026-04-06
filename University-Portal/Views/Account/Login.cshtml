@@ -2,7 +2,7 @@
 @model LoginViewModel
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Logowanie";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
@@ -14,14 +14,14 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
+                <label asp-for="Email" class="form-label">Adres e-mail</label>
+                <input asp-for="Email" class="form-control" placeholder="Wpisz swój e-mail" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" />
+                <label asp-for="Password" class="form-label">Hasło</label>
+                <input asp-for="Password" class="form-control" placeholder="Wpisz swoje hasło" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
@@ -64,17 +64,17 @@
                 const typeClass = success ? "bg-success" : "bg-danger";
 
                 const toastHtml = `
-                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
-                         role="alert" style="cursor:pointer;">
-                        <div class="toast-header ${typeClass} text-white border-0">
-                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
-                            <button type="button" class="btn-close btn-close-white"></button>
-                        </div>
-                        <div class="toast-body">
-                            ${message}
-                        </div>
-                    </div>
-                `;
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow"
+                                 role="alert" style="cursor:pointer;">
+                                <div class="toast-header ${typeClass} text-white border-0">
+                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                    <button type="button" class="btn-close btn-close-white"></button>
+                                </div>
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                            </div>
+                        `;
                 $("#toastContainer").append(toastHtml);
 
                 const toast = $("#" + toastId);

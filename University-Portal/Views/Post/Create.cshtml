@@ -1,7 +1,7 @@
 ﻿@model University_Portal.ViewModels.BlogViewModel.PostViewModel
 
 @{
-    ViewData["Title"] = "Create Post";
+    ViewData["Title"] = "Utwórz post";
 }
 <link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
 
@@ -11,7 +11,7 @@
         <div class="page-header">
             <h2>@ViewData["Title"]</h2>
             <a asp-action="Index" asp-controller="Post" class="btn btn-outline-secondary">
-                Back to List
+                Powrót do listy
             </a>
         </div>
 
@@ -38,7 +38,7 @@
                 <select asp-for="Post.CategoryId"
                         asp-items="Model.Categories"
                         class="form-control">
-                    <option value="">-- Select Category --</option>
+                    <option value="">-- Wybierz kategorię --</option>
                 </select>
                 <span asp-validation-for="Post.CategoryId" class="text-danger"></span>
             </div>
@@ -66,13 +66,13 @@
 
             <div class="btn-group-actions">
                 <button type="submit" class="btn btn-primary">
-                    Create
+                    Utwórz
                 </button>
 
                 <a asp-action="Index"
                    asp-controller="Post"
                    class="btn btn-secondary">
-                    Cancel
+                    Anuluj
                 </a>
             </div>
 
@@ -104,13 +104,13 @@
                 const toastId = "toast_" + Date.now();
                 const typeClass = success ? "bg-success" : "bg-danger";
                 const toastHtml = `
-                    <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
-                        <div class="toast-header ${typeClass} text-white border-0">
-                            <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
-                            <button type="button" class="btn-close btn-close-white"></button>
-                        </div>
-                        <div class="toast-body">${message}</div>
-                    </div>`;
+                            <div id="${toastId}" class="toast show text-white ${typeClass} mb-2 shadow" role="alert" style="cursor:pointer;">
+                                <div class="toast-header ${typeClass} text-white border-0">
+                                    <strong class="me-auto">${success ? "Sukces" : "Błąd"}</strong>
+                                    <button type="button" class="btn-close btn-close-white"></button>
+                                </div>
+                                <div class="toast-body">${message}</div>
+                            </div>`;
                 $("#toastContainer").append(toastHtml);
                 const toast = $("#" + toastId);
                 toast.on("click", () => toast.fadeOut(300, () => toast.remove()));
@@ -157,4 +157,3 @@
         });
     </script>
 }
-
