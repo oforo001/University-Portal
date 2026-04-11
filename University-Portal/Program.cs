@@ -8,7 +8,7 @@ using University_Portal.AppServices.Account;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<University_Portal.AppServices.E_mail.EmailService>();
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
