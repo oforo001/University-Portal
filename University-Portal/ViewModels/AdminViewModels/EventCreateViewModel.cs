@@ -5,6 +5,8 @@ namespace University_Portal.ViewModels.AdminViewModels
 {
     public class EventCreateViewModel
     {
+        public int EventId { get; set; }
+
         [Required(ErrorMessage = "Pole Tytuł jest wymagane")]
         [StringLength(200, MinimumLength = 2, ErrorMessage = "Tytuł musi mieć od 2 do 200 znaków")]
         [Display(Name = "Tytuł wydarzenia")]
