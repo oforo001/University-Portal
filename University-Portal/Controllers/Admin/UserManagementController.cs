@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using University_Portal.AppServices.E_mail;
+using University_Portal.Data;
 using University_Portal.Models;
 using University_Portal.ViewModels.AdminViewModels;
 
@@ -11,12 +12,14 @@ namespace University_Portal.Controllers.Admin
     [Authorize(Roles = "Admin")]
     public class UserManagementController : Controller
     {
+        private readonly ApplicationContext _context;
         private readonly EmailService _emailService;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserManagementController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, EmailService emailService)
+        public UserManagementController(ApplicationContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, EmailService emailService)
         {
+            _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _emailService = emailService;
@@ -146,7 +149,7 @@ namespace University_Portal.Controllers.Admin
         public async Task<IActionResult> Delete(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
-                return BadRequest(new { message = "Nieprawidłny identyfikator użytkownika." });
+                return BadRequest(new { message = "Nieprawidłowy identyfikator użytkownika." });
 
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
@@ -160,14 +163,70 @@ namespace University_Portal.Controllers.Admin
             if (admins.Count == 1 && admins.First().Id == user.Id)
                 return BadRequest(new { message = "Nie możesz usunąć ostatniego administratora." });
 
-            var result = await _userManager.DeleteAsync(user);
-            if (!result.Succeeded)
+            var hasActiveRegistrations = await _context.EventRegistrations
+                .AnyAsync(x => x.UserId == id && !x.IsCancelled);
+
+            if (hasActiveRegistrations)
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return StatusCode(500, new { message = $"Błąd usuwania użytkownika: {errors}" });
+                return BadRequest(new
+                {
+                    message = "Ten użytkownik jest zapisany na wydarzenia. Najpierw anuluj jego zapisy lub usuń je.",
+                    hasRegistrations = true
+                });
             }
 
-            return Ok(new { message = "Użytkownik został usunięty." });
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var registrations = await _context.EventRegistrations
+                    .Where(x => x.UserId == id)
+                    .ToListAsync();
+
+                if (registrations.Any())
+                {
+                    _context.EventRegistrations.RemoveRange(registrations);
+                    await _context.SaveChangesAsync();
+                }
+
+                var result = await _userManager.DeleteAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    await transaction.RollbackAsync();
+
+                    return StatusCode(500, new
+                    {
+                        message = $"Błąd usuwania użytkownika: {errors}"
+                    });
+                }
+
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    message = "Użytkownik został usunięty."
+                });
+            }
+            catch (DbUpdateException)
+            {
+                await transaction.RollbackAsync();
+
+                return BadRequest(new
+                {
+                    message = "Nie można usunąć użytkownika - posiada powiązane dane."
+                });
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+
+                return StatusCode(500, new
+                {
+                    message = "Wystąpił nieoczekiwany błąd podczas usuwania użytkownika."
+                });
+            }
         }
 
     }
