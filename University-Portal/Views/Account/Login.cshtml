@@ -38,7 +38,10 @@
                 </label>
             </div>
 
-            <input type="submit" value="Zaloguj się" class="btn btn-success w-100" />
+            <button type="submit" class="btn btn-success w-100" id="loginBtn">
+                <span id="loginText">Zaloguj się</span>
+                <span id="loginSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+            </button>
 
             <p class="text-center mt-2">
                 Nie masz konta? <a asp-controller="Account" asp-action="Register" class="text-decoration-none">Zarejestruj się</a>
@@ -89,29 +92,42 @@
 
             $("#loginForm").submit(function (e) {
                 e.preventDefault();
+
                 const form = $(this);
-                const btn = form.find("input[type=submit]");
+                const btn = $("#loginBtn");
+                const spinner = $("#loginSpinner");
+                const text = $("#loginText");
+
                 btn.prop("disabled", true);
+                spinner.removeClass("d-none");
+                text.text("Logowanie...");
 
                 $.ajax({
                     type: "POST",
                     url: form.attr("action"),
                     data: form.serialize(),
+
                     success: function (res) {
                         if (res.success) {
                             showToast(true, "Logowanie udane!");
+
                             setTimeout(() => {
                                 window.location.href = res.redirectUrl;
                             }, 500);
-                        } else if (res.errors) {
+                        }
+                        else if (res.errors) {
                             showToast(false, res.errors.join("<br>"));
                         }
                     },
+
                     error: function () {
                         showToast(false, "Wystąpił nieoczekiwany błąd.");
                     },
+
                     complete: function () {
                         btn.prop("disabled", false);
+                        spinner.addClass("d-none");
+                        text.text("Zaloguj się");
                     }
                 });
             });

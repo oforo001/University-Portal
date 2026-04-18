@@ -37,7 +37,10 @@
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
             </div>
 
-            <input type="submit" value="Zarejestruj" class="btn btn-success w-100" />
+            <button type="submit" class="btn btn-success w-100" id="registerBtn">
+                <span id="registerText">Zarejestruj</span>
+                <span id="registerSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+            </button>
 
             <p class="text-center mt-2">
                 Masz już konto? <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Zaloguj się</a>
@@ -91,17 +94,25 @@
 
             $("#registerForm").submit(function (e) {
                 e.preventDefault();
+
                 const form = $(this);
-                const btn = form.find("input[type=submit]");
+                const btn = $("#registerBtn");
+                const spinner = $("#registerSpinner");
+                const text = $("#registerText");
+
                 btn.prop("disabled", true);
+                spinner.removeClass("d-none");
+                text.text("Rejestracja...");
 
                 $.ajax({
                     type: "POST",
                     url: form.attr("action"),
                     data: form.serialize(),
+
                     success: function (res) {
                         if (res.success) {
                             showToast(true, res.message);
+
                             if (res.redirectUrl) {
                                 setTimeout(() => {
                                     window.location.href = res.redirectUrl;
@@ -109,15 +120,20 @@
                             } else {
                                 form[0].reset();
                             }
-                        } else if (res.errors) {
+                        }
+                        else if (res.errors) {
                             showToast(false, res.errors.join("<br>"));
                         }
                     },
+
                     error: function () {
                         showToast(false, "Wystąpił nieoczekiwany błąd.");
                     },
+
                     complete: function () {
                         btn.prop("disabled", false);
+                        spinner.addClass("d-none");
+                        text.text("Zarejestruj");
                     }
                 });
             });
