@@ -143,7 +143,6 @@ namespace University_Portal.Controllers.Admin
                 ? Ok(new { success = true, message = "Użytkownik został deaktywowany." })
                 : StatusCode(500, new { success = false, message = "Błąd podczas deaktywowania użytkownika." });
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
@@ -174,59 +173,63 @@ namespace University_Portal.Controllers.Admin
                     hasRegistrations = true
                 });
             }
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                var registrations = await _context.EventRegistrations
-                    .Where(x => x.UserId == id)
-                    .ToListAsync();
+                await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                if (registrations.Any())
+                try
                 {
-                    _context.EventRegistrations.RemoveRange(registrations);
-                    await _context.SaveChangesAsync();
+                    var registrations = await _context.EventRegistrations
+                        .Where(x => x.UserId == id)
+                        .ToListAsync();
+
+                    if (registrations.Any())
+                    {
+                        _context.EventRegistrations.RemoveRange(registrations);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    var result = await _userManager.DeleteAsync(user);
+
+                    if (!result.Succeeded)
+                    {
+                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                        await transaction.RollbackAsync();
+
+                        return StatusCode(500, new
+                        {
+                            message = $"Błąd usuwania użytkownika: {errors}"
+                        });
+                    }
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        message = "Użytkownik został usunięty."
+                    });
                 }
-
-                var result = await _userManager.DeleteAsync(user);
-
-                if (!result.Succeeded)
+                catch (DbUpdateException)
                 {
-                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    await transaction.RollbackAsync();
+
+                    return BadRequest(new
+                    {
+                        message = "Nie można usunąć użytkownika - posiada powiązane dane."
+                    });
+                }
+                catch (Exception)
+                {
                     await transaction.RollbackAsync();
 
                     return StatusCode(500, new
                     {
-                        message = $"Błąd usuwania użytkownika: {errors}"
+                        message = "Wystąpił nieoczekiwany błąd podczas usuwania użytkownika."
                     });
                 }
-
-                await transaction.CommitAsync();
-
-                return Ok(new
-                {
-                    message = "Użytkownik został usunięty."
-                });
-            }
-            catch (DbUpdateException)
-            {
-                await transaction.RollbackAsync();
-
-                return BadRequest(new
-                {
-                    message = "Nie można usunąć użytkownika - posiada powiązane dane."
-                });
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-
-                return StatusCode(500, new
-                {
-                    message = "Wystąpił nieoczekiwany błąd podczas usuwania użytkownika."
-                });
-            }
+            });
         }
 
     }
