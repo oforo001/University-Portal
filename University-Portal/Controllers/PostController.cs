@@ -208,11 +208,16 @@ namespace University_Portal.Controllers
             await _context.Comments.AddAsync(comment);
             await _context.SaveChangesAsync();
 
+            var warsawTime = TimeZoneInfo.ConvertTimeFromUtc(
+                comment.CommentDate,
+                TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")
+            );
+
             return Json(new
             {
                 id = comment.Id,
                 username = comment.UserName,
-                commentDate = comment.CommentDate.ToString("MMM dd, yyyy HH:mm"),
+                commentDate = warsawTime.ToString("MMM dd, yyyy HH:mm"),
                 content = comment.Content
             });
         }
