@@ -6,12 +6,19 @@
 
 <link rel="stylesheet" href="~/css/createPost.css" asp-append-version="true" />
 
+<div id="toastContainer"
+     class="position-fixed top-0 end-0 p-3"
+     style="z-index: 99999; pointer-events:none;">
+</div>
+
 <div class="content-wrapper">
     <div class="form-card">
-
         <div class="page-header">
             <h2>@ViewData["Title"]</h2>
-            <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
+
+            <a asp-controller="Admin"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
                 Powrót do wydarzeń
             </a>
         </div>
@@ -20,28 +27,28 @@
 
         <form id="editEventForm"
               asp-action="EditEvent"
-              asp-route-id="@ViewContext.RouteData.Values["id"]"
+              asp-route-id="@Model.RegisteredUsers.FirstOrDefault()?.EventId"
               method="post"
               enctype="multipart/form-data">
 
-            <div class="validation-summary">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            </div>
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <label asp-for="Title" class="form-label"></label>
-                <input asp-for="Title" class="form-control" placeholder="Tytuł wydarzenia" />
+                <label asp-for="Title"></label>
+                <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Opisz wydarzenie"></textarea>
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Date" class="form-label"></label>
+                <label asp-for="Date"></label>
                 <input asp-for="Date"
                        type="datetime-local"
                        class="form-control"
@@ -50,35 +57,15 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Location" class="form-label"></label>
-                <input asp-for="Location" class="form-control" placeholder="Budynek, sala lub link online" />
+                <label asp-for="Location"></label>
+                <input asp-for="Location" class="form-control" />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="MaxParticipants" class="form-label"></label>
+                <label asp-for="MaxParticipants"></label>
                 <input asp-for="MaxParticipants" type="number" min="1" class="form-control" />
                 <span asp-validation-for="MaxParticipants" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                @if (!string.IsNullOrEmpty(Model.ImagePath))
-                {
-                    <div class="mb-2">
-                        <label class="form-label">Aktualne zdjęcie</label><br />
-                        <img src="~/@Model.ImagePath" style="max-width:220px; border-radius:8px;" />
-                    </div>
-                }
-
-                <label asp-for="Image" class="form-label">Prześlij nowe zdjęcie (opcjonalnie)</label>
-                <input asp-for="Image"
-                       type="file"
-                       class="form-control"
-                       accept=".jpg,.jpeg,.png,.gif" />
-                <span asp-validation-for="Image" class="text-danger"></span>
-                <small class="form-text text-muted">
-                    Dozwolone formaty: .jpg, .jpeg, .png, .gif. Maksymalny rozmiar 4 MB.
-                </small>
             </div>
 
             <div class="btn-group-actions">
@@ -94,76 +81,207 @@
 
         @if (Model.RegisteredUsers?.Any() == true)
         {
-            <div class="mt-5">
-                <h4 class="mb-3">Zarejestrowani użytkownicy</h4>
-                <div class="table-responsive shadow-sm rounded-3">
-                    <table class="table align-middle mb-0 custom-blue-table">
-                        <thead>
-                            <tr>
-                                <th scope="col"></th>
-                                <th scope="col">Nazwa użytkownika</th>
-                                <th scope="col">E-mail</th>
-                                <th scope="col">Zarejestrowano</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
-                            {
-                                var user = Model.RegisteredUsers[i];
-                                <tr>
-                                    <th scope="row">@((i + 1))</th>
-                                    <td>@user.FullName</td>
-                                    <td><a href="mailto:@user.Email" class="text-decoration-none">@user.Email</a></td>
-                                    <td>
-                                        <span class="badge bg-primary rounded-pill">
-                                            @user.RegisteredAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
-                                        </span>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="mt-5">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="m-0">Zarejestrowani użytkownicy</h4>
+
+                        <span class="badge bg-primary rounded-pill px-3 py-2">
+                        @Model.RegisteredUsers.Count
+                        </span>
+                    </div>
+
+                    <div class="users-table-card shadow-sm rounded-4 p-3 bg-white">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle mb-0">
+
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nazwa</th>
+                                        <th>Email</th>
+                                        <th>Data rejestracji</th>
+                                        <th class="text-end">Akcja</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                @for (int i = 0; i < Model.RegisteredUsers.Count; i++)
+                                {
+                                    var user = Model.RegisteredUsers[i];
+
+                                            <tr>
+                                                <td class="text-muted">@(@i + 1)</td>
+
+                                                <td class="fw-semibold">
+                                            @user.FullName
+                                                </td>
+
+                                                <td>
+                                                    <a href="mailto:@user.Email" class="text-decoration-none">
+                                                @user.Email
+                                                    </a>
+                                                </td>
+
+                                                <td>
+                                                    <span class="badge bg-light text-dark border">
+                                                @user.RegisteredAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
+                                                    </span>
+                                                </td>
+
+                                                <td class="text-end">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-danger cancel-btn"
+                                                            data-user-id="@user.UserId"
+                                                            data-event-id="@user.EventId">
+                                                        Usuń
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                }
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    </div>
                 </div>
-            </div>
         }
+        else
+        {
+                <div class="mt-5">
+
+                    <div class="users-table-card shadow-sm rounded-4 p-5 bg-white text-center">
+
+                        <div class="mb-3">
+                            <i class="bi bi-people" style="font-size: 3.5rem; color: #6c757d;"></i>
+                        </div>
+
+                        <h4 class="mb-2">Brak zapisanych użytkowników</h4>
+
+                        <p class="text-muted mb-0" style="max-width: 420px; margin: 0 auto;">
+                            Na to wydarzenie jeszcze nikt się nie zapisał.
+                        </p>
+
+                    </div>
+
+                </div>
+        }
+
+    </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+        <partial name="_ValidationScriptsPartial" />
 
-    <script>
-        document.getElementById("editEventForm")
-            .addEventListener("submit", async function (e) {
-                e.preventDefault();
-                const form = this;
-                const btn = document.getElementById("submitBtn");
+        <script>
+            function showToast(success, message) {
 
-                if (!$(form).valid()) return;
+                const id = "t_" + Date.now();
+                const type = success ? "bg-success" : "bg-danger";
+
+                const html = `
+                    <div id="${id}" class="toast show text-white ${type} mb-2 shadow"
+                         style="pointer-events:auto; min-width:260px; cursor:pointer;">
+                        <div class="toast-header ${type} text-white border-0">
+                            <strong class="me-auto">
+                                ${success ? "Sukces" : "Błąd"}
+                            </strong>
+                            <button type="button" class="btn-close btn-close-white ms-2"></button>
+                        </div>
+                        <div class="toast-body">${message}</div>
+                    </div>
+                `;
+
+                const container = document.getElementById("toastContainer");
+                container.insertAdjacentHTML("beforeend", html);
+
+                const el = document.getElementById(id);
+
+                el.onclick = () => el.remove();
+
+                setTimeout(() => {
+                    if (el) el.remove();
+                }, 4000);
+            }
+
+            document.getElementById("editEventForm")
+                .addEventListener("submit", async (e) => {
+
+                    e.preventDefault();
+
+                    const form = e.target;
+                    const btn = document.getElementById("submitBtn");
+
+                    if (!$(form).valid()) return;
+
+                    btn.disabled = true;
+
+                    try {
+                        const res = await fetch(form.action, {
+                            method: "POST",
+                            body: new FormData(form)
+                        });
+
+                        const data = await res.json().catch(() => null);
+
+                        if (res.ok) {
+                            showToast(true, data?.message || "Zaktualizowano");
+                            setTimeout(() => location.href = "/Admin/Index", 800);
+                        } else {
+                            showToast(false, data?.message || "Błąd");
+                            btn.disabled = false;
+                        }
+
+                    } catch {
+                        showToast(false, "Błąd sieci");
+                        btn.disabled = false;
+                    }
+                });
+
+            document.addEventListener("click", async (e) => {
+
+                const btn = e.target.closest(".cancel-btn");
+                if (!btn) return;
+
+                const userId = btn.dataset.userId;
+                const eventId = btn.dataset.eventId;
 
                 btn.disabled = true;
-                btn.innerText = "Aktualizowanie...";
-
-                const formData = new FormData(form);
 
                 try {
-                    const response = await fetch(form.action, {
+                    const res = await fetch("/Admin/EventRegistration/cancel", {
                         method: "POST",
-                        body: formData
+                        headers: {
+                            "Content-Type": "application/json",
+                            "RequestVerificationToken":
+                                document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ userId, eventId })
                     });
 
-                    if (response.ok) {
-                        window.location.href = "/Admin/Index";
+                    const data = await res.json().catch(() => null);
+
+                    if (res.ok) {
+                        showToast(true, data?.message || "Anulowano");
+
+                        const row = btn.closest("tr");
+                        row.style.transition = "0.2s";
+                        row.style.opacity = "0";
+
+                        setTimeout(() => row.remove(), 200);
+
                     } else {
-                        const error = await response.json();
-                        alert(error.message || "Aktualizacja nie powiodła się.");
+                        showToast(false, data?.message || "Błąd");
                         btn.disabled = false;
-                        btn.innerText = "Aktualizuj";
                     }
-                } catch (err) {
-                    alert("Wystąpił nieoczekiwany błąd.");
+
+                } catch {
+                    showToast(false, "Błąd połączenia");
                     btn.disabled = false;
-                    btn.innerText = "Aktualizuj";
                 }
             });
-    </script>
+        </script>
 }

@@ -25,6 +25,18 @@ namespace University_Portal.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<EventRegistration>()
+             .HasOne(er => er.Event)
+             .WithMany(e => e.Registrations)
+             .HasForeignKey(er => er.EventId)
+             .OnDelete(DeleteBehavior.Cascade);  
+
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(er => er.User)
+                .WithMany()
+                .HasForeignKey(er => er.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

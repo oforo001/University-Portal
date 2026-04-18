@@ -37,6 +37,6 @@ namespace University_Portal.Models
         [ForeignKey("OrganizerId")]
         public virtual AppUser Organizer { get; set; }
 
-        public virtual ICollection<EventRegistration> Registrations { get; set; }
+        public virtual ICollection<EventRegistration> Registrations { get; set; } = new HashSet<EventRegistration>();
     }
 }

@@ -78,6 +78,7 @@ namespace University_Portal.Controllers.Admin
                 .Select(r => new RegisteredUser
                 {
                     UserId = r.User.Id,
+                    EventId = r.EventId,
                     FullName = r.User.FullName,
                     Email = r.User.Email,
                     RegisteredAt = r.RegisteredAt.ToLocalTime(),
@@ -86,6 +87,7 @@ namespace University_Portal.Controllers.Admin
 
             var model = new EventCreateViewModel
             {
+                EventId = ev.Id,
                 Title = ev.Title,
                 Description = ev.Description,
                 Date = ev.Date,
