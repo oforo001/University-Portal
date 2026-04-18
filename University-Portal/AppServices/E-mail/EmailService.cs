@@ -100,22 +100,50 @@ namespace University_Portal.AppServices.E_mail
         }
         public async Task SendEmailAsync(EmailDto request)
         {
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_config.GetSection("EmailUsername").Value));
-            email.To.Add(MailboxAddress.Parse(request.To));
-            email.Subject = request.Subject;
-            email.Body = new TextPart(TextFormat.Html) { Text = request.Body };
+            var host = _config["EmailHost"];
+            var port = int.Parse(_config["Port"]);
+            var username = _config["EmailUsername"];
+            var password = _config["EmailPassword"];
 
-            using var smtp = new SmtpClient();
+            if (string.IsNullOrWhiteSpace(host) ||
+                string.IsNullOrWhiteSpace(username) ||
+                string.IsNullOrWhiteSpace(password))
+            {
+                throw new Exception("SMTP config missing.");
+            }
 
-            await smtp.ConnectAsync(_config.GetSection("EmailHost").Value, int.Parse(_config.GetSection("Port").Value), SecureSocketOptions.SslOnConnect);
+            try
+            {
+                var email = new MimeMessage();
 
-            await smtp.AuthenticateAsync(_config.GetSection("EmailUsername").Value, _config.GetSection("EmailPassword").Value);
+                email.From.Add(MailboxAddress.Parse(username));
+                email.To.Add(MailboxAddress.Parse(request.To));
+                email.Subject = request.Subject;
+                email.Body = new TextPart(TextFormat.Html)
+                {
+                    Text = request.Body
+                };
 
-            await smtp.SendAsync(email);
+                using var smtp = new SmtpClient
+                {
+                    Timeout = 30000
+                };
 
-            await smtp.DisconnectAsync(true);
+                await smtp.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+
+                await smtp.AuthenticateAsync(username, password);
+
+                await smtp.SendAsync(email);
+
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"EMAIL ERROR FULL: {ex}");
+                throw;
+            }
         }
+
         public async Task SendPasswordResetEmailAsync(string toEmail, string token)
         {
             string subject = "Reset hasła";
@@ -137,6 +165,6 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
-        
+
     }
 }
