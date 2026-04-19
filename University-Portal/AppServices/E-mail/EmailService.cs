@@ -1,8 +1,5 @@
-﻿using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
-using MimeKit.Text;
-using University_Portal.Models;
+﻿using University_Portal.Models;
+using PostmarkDotNet;
 
 namespace University_Portal.AppServices.E_mail
 {
@@ -100,42 +97,32 @@ namespace University_Portal.AppServices.E_mail
         }
         public async Task SendEmailAsync(EmailDto request)
         {
-            var host = _config["EmailHost"];
-            var port = int.Parse(_config["Port"]);
-            var username = _config["EmailUsername"];
-            var password = _config["EmailPassword"];
+            var apiKey = _config["Postmark:ApiKey"];
+            var fromEmail = _config["Postmark:FromEmail"];
+            var fromName = _config["Postmark:FromName"];
 
-            if (string.IsNullOrWhiteSpace(host) ||
-                string.IsNullOrWhiteSpace(username) ||
-                string.IsNullOrWhiteSpace(password))
-            {
-                throw new Exception("SMTP config missing.");
-            }
+            if (string.IsNullOrEmpty(apiKey))
+                throw new Exception("Postmark API key missing");
+
+            var client = new PostmarkClient(apiKey);
 
             try
             {
-                var email = new MimeMessage();
-
-                email.From.Add(MailboxAddress.Parse(username));
-                email.To.Add(MailboxAddress.Parse(request.To));
-                email.Subject = request.Subject;
-                email.Body = new TextPart(TextFormat.Html)
+                var message = new PostmarkMessage
                 {
-                    Text = request.Body
+                    From = $"{fromName} <{fromEmail}>",
+                    To = request.To,
+                    Subject = request.Subject,
+                    HtmlBody = request.Body,
+                    TrackOpens = true
                 };
 
-                using var smtp = new SmtpClient
+                var response = await client.SendMessageAsync(message);
+
+                if (response.Status != PostmarkStatus.Success)
                 {
-                    Timeout = 30000
-                };
-
-                await smtp.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-
-                await smtp.AuthenticateAsync(username, password);
-
-                await smtp.SendAsync(email);
-
-                await smtp.DisconnectAsync(true);
+                    throw new Exception($"Postmark error: {response.Message}");
+                }
             }
             catch (Exception ex)
             {

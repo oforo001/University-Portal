@@ -3,6 +3,8 @@
 *.user
 *.suo
 appsettings.json
+Properties/PublishProfiles/
+ServiceDependencies
 
 # Build output
 bin/
