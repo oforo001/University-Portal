@@ -1,15 +1,77 @@
 ﻿using University_Portal.Models;
-using PostmarkDotNet;
+using Azure.Communication.Email;
+using Azure;
 
 namespace University_Portal.AppServices.E_mail
 {
     public class EmailService : IEmailService
     {
-        public IConfiguration _config { get; }
+        private readonly IConfiguration _config;
+        private readonly EmailClient _emailClient;
+        private readonly string _sender;
+
         public EmailService(IConfiguration config)
         {
-            _config=config;
+            _config = config;
+
+            var connectionString = _config["AzureEmail:ConnectionString"];
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new Exception("Azure Email connection string missing");
+
+            _emailClient = new EmailClient(connectionString);
+
+            _sender = _config["AzureEmail:SenderAddress"];
+
+            if (string.IsNullOrWhiteSpace(_sender))
+                throw new Exception("Azure Email sender address missing");
         }
+
+        // =========================
+        // CORE SEND METHOD (AZURE)
+        // =========================
+        public async Task SendEmailAsync(EmailDto request)
+        {
+            var message = new EmailMessage(
+                senderAddress: _sender,
+                content: new EmailContent(request.Subject)
+                {
+                    Html = request.Body,
+                    PlainText = "Please view this email in HTML format."
+                },
+                recipients: new EmailRecipients(new List<EmailAddress>
+                {
+                    new EmailAddress(request.To)
+                })
+            );
+
+            try
+            {
+                var operation = await _emailClient.SendAsync(
+                    WaitUntil.Completed,
+                    message
+                );
+
+                var result = operation.Value;
+
+                Console.WriteLine($"Status: {result.Status}");
+
+                if (result.Status != EmailSendStatus.Succeeded)
+                {
+                    throw new Exception($"Email sending failed: {result.Status}");
+                }
+            }
+            catch (RequestFailedException ex)
+            {
+                Console.WriteLine("=== AZURE EMAIL ERROR ===");
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        // =========================
+        // VERIFICATION EMAIL
+        // =========================
         public async Task SendEmailVerificationAsync(string toEmail, string token)
         {
             string subject = "Twój kod weryfikacyjny";
@@ -52,6 +114,10 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
+
+        // =========================
+        // WELCOME EMAIL
+        // =========================
         public async Task SendWelcomeEmailAsync(string toEmail, string fullName, string password, string role)
         {
             string subject = "Witamy w University Portal!";
@@ -95,109 +161,10 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
-        //public async Task SendEmailAsync(EmailDto request)
-        //{
-        //    var apiKey = _config["Postmark:ApiKey"];
-        //    var fromEmail = _config["Postmark:FromEmail"];
-        //    var fromName = _config["Postmark:FromName"];
 
-        //    if (string.IsNullOrEmpty(apiKey))
-        //        throw new Exception("Postmark API key missing");
-
-        //    var client = new PostmarkClient(apiKey);
-
-        //    try
-        //    {
-        //        var message = new PostmarkMessage
-        //        {
-        //            From = fromEmail,
-        //            To = request.To,
-        //            Subject = request.Subject,
-        //            HtmlBody = request.Body,
-        //            TrackOpens = true
-        //        };
-
-        //        var response = await client.SendMessageAsync(message);
-
-        //        if (response.Status != PostmarkStatus.Success)
-        //        {
-        //            throw new Exception($"Postmark error: {response.Message}");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("PostmarkResponseException:");
-        //        Console.WriteLine(ex.Message);
-        //        Console.WriteLine(ex.InnerException?.Message);
-        //        throw;
-        //    }
-        //}
-        public async Task SendEmailAsync(EmailDto request)
-        {
-            var apiKey = _config["Postmark:ApiKey"]?.Trim();
-            var fromEmail = _config["Postmark:FromEmail"]?.Trim();
-            var fromName = _config["Postmark:FromName"]?.Trim();
-
-            Console.WriteLine("=== EMAIL DEBUG START ===");
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-                throw new Exception("Postmark API key missing");
-
-            if (string.IsNullOrWhiteSpace(fromEmail))
-                throw new Exception("Postmark FromEmail missing");
-
-            Console.WriteLine($"ApiKey (first 6): {apiKey.Substring(0, Math.Min(6, apiKey.Length))}...");
-            Console.WriteLine($"FromEmail: '{fromEmail}'");
-            Console.WriteLine($"FromName: '{fromName}'");
-            Console.WriteLine($"To: '{request.To}'");
-            Console.WriteLine($"Subject: '{request.Subject}'");
-
-            var client = new PostmarkClient(apiKey);
-
-            try
-            {
-                var message = new PostmarkMessage
-                {
-                    // ✅ ALWAYS use email only for debugging
-                    From = fromEmail,
-
-                    To = request.To,
-                    Subject = request.Subject,
-                    HtmlBody = request.Body,
-                    TrackOpens = true
-                };
-
-                Console.WriteLine("Sending email...");
-
-                var response = await client.SendMessageAsync(message);
-
-                Console.WriteLine("=== POSTMARK RESPONSE ===");
-                Console.WriteLine($"Status: {response.Status}");
-                Console.WriteLine($"Message: {response.Message}");
-                Console.WriteLine($"ErrorCode: {response.ErrorCode}");
-
-                if (response.Status != PostmarkStatus.Success)
-                {
-                    throw new Exception(
-                        $"Postmark error: {response.Message}, Code: {response.ErrorCode}");
-                }
-
-                Console.WriteLine("=== EMAIL SENT SUCCESS ===");
-            }
-            catch (Postmark.Exceptions.PostmarkResponseException ex)
-            {
-                Console.WriteLine("=== POSTMARK RESPONSE EXCEPTION ===");
-                Console.WriteLine(ex.ToString());
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("=== GENERAL EMAIL ERROR ===");
-                Console.WriteLine(ex.ToString());
-                throw;
-            }
-        }
-
+        // =========================
+        // PASSWORD RESET EMAIL
+        // =========================
         public async Task SendPasswordResetEmailAsync(string toEmail, string token)
         {
             string subject = "Reset hasła";
@@ -219,6 +186,5 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
-
     }
 }
