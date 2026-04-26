@@ -185,3 +185,74 @@
 .modal.show .modal-dialog {
     transform: scale(1);
 }
+.event-card .card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    transition: transform .25s ease, box-shadow .25s ease;
+    background: #fff;
+}
+
+    .event-card .card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 36px rgba(0,0,0,0.18);
+    }
+
+.card-img-top {
+    transition: transform .4s ease;
+}
+
+.event-card .card:hover .card-img-top {
+    transform: scale(1.03);
+}
+
+.action-bar {
+    background: linear-gradient(to right, #f8f9fa, #ffffff);
+    border-top: 1px solid #eee;
+}
+
+.btn-action {
+    border-radius: 10px;
+    font-weight: 500;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.btn-view {
+    background: #0d6efd;
+    color: white;
+    border: none;
+}
+
+    .btn-view:hover {
+        background: #0b5ed7;
+        transform: scale(1.04);
+        box-shadow: 0 6px 14px rgba(13,110,253,0.25);
+    }
+
+.btn-delete {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    background: transparent;
+}
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+        transform: scale(1.04);
+        box-shadow: 0 6px 14px rgba(220,53,69,0.25);
+    }
+
+.delete-modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.30);
+}
+
+.no-events {
+    opacity: .85;
+}
