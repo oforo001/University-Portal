@@ -95,14 +95,62 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
+        //public async Task SendEmailAsync(EmailDto request)
+        //{
+        //    var apiKey = _config["Postmark:ApiKey"];
+        //    var fromEmail = _config["Postmark:FromEmail"];
+        //    var fromName = _config["Postmark:FromName"];
+
+        //    if (string.IsNullOrEmpty(apiKey))
+        //        throw new Exception("Postmark API key missing");
+
+        //    var client = new PostmarkClient(apiKey);
+
+        //    try
+        //    {
+        //        var message = new PostmarkMessage
+        //        {
+        //            From = fromEmail,
+        //            To = request.To,
+        //            Subject = request.Subject,
+        //            HtmlBody = request.Body,
+        //            TrackOpens = true
+        //        };
+
+        //        var response = await client.SendMessageAsync(message);
+
+        //        if (response.Status != PostmarkStatus.Success)
+        //        {
+        //            throw new Exception($"Postmark error: {response.Message}");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine("PostmarkResponseException:");
+        //        Console.WriteLine(ex.Message);
+        //        Console.WriteLine(ex.InnerException?.Message);
+        //        throw;
+        //    }
+        //}
         public async Task SendEmailAsync(EmailDto request)
         {
-            var apiKey = _config["Postmark:ApiKey"];
-            var fromEmail = _config["Postmark:FromEmail"];
-            var fromName = _config["Postmark:FromName"];
+            var apiKey = _config["Postmark:ApiKey"]?.Trim();
+            var fromEmail = _config["Postmark:FromEmail"]?.Trim();
+            var fromName = _config["Postmark:FromName"]?.Trim();
 
-            if (string.IsNullOrEmpty(apiKey))
+            Console.WriteLine("=== EMAIL DEBUG START ===");
+
+            if (string.IsNullOrWhiteSpace(apiKey))
                 throw new Exception("Postmark API key missing");
+
+            if (string.IsNullOrWhiteSpace(fromEmail))
+                throw new Exception("Postmark FromEmail missing");
+
+            Console.WriteLine($"ApiKey (first 6): {apiKey.Substring(0, Math.Min(6, apiKey.Length))}...");
+            Console.WriteLine($"FromEmail: '{fromEmail}'");
+            Console.WriteLine($"FromName: '{fromName}'");
+            Console.WriteLine($"To: '{request.To}'");
+            Console.WriteLine($"Subject: '{request.Subject}'");
 
             var client = new PostmarkClient(apiKey);
 
@@ -110,23 +158,42 @@ namespace University_Portal.AppServices.E_mail
             {
                 var message = new PostmarkMessage
                 {
-                    From = $"{fromName} <{fromEmail}>",
+                    // ✅ ALWAYS use email only for debugging
+                    From = fromEmail,
+
                     To = request.To,
                     Subject = request.Subject,
                     HtmlBody = request.Body,
                     TrackOpens = true
                 };
 
+                Console.WriteLine("Sending email...");
+
                 var response = await client.SendMessageAsync(message);
+
+                Console.WriteLine("=== POSTMARK RESPONSE ===");
+                Console.WriteLine($"Status: {response.Status}");
+                Console.WriteLine($"Message: {response.Message}");
+                Console.WriteLine($"ErrorCode: {response.ErrorCode}");
 
                 if (response.Status != PostmarkStatus.Success)
                 {
-                    throw new Exception($"Postmark error: {response.Message}");
+                    throw new Exception(
+                        $"Postmark error: {response.Message}, Code: {response.ErrorCode}");
                 }
+
+                Console.WriteLine("=== EMAIL SENT SUCCESS ===");
+            }
+            catch (Postmark.Exceptions.PostmarkResponseException ex)
+            {
+                Console.WriteLine("=== POSTMARK RESPONSE EXCEPTION ===");
+                Console.WriteLine(ex.ToString());
+                throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"EMAIL ERROR FULL: {ex}");
+                Console.WriteLine("=== GENERAL EMAIL ERROR ===");
+                Console.WriteLine(ex.ToString());
                 throw;
             }
         }
