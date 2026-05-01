@@ -25,4 +25,4 @@ jobs:
         run: dotnet build ./University-Portal/University-Portal.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test ./University-Portal.Tests/University-Potal.Tests.csproj -c Release
+        run: dotnet test ./University-Portal.Tests/University-Portal.Tests.csproj -c Release
