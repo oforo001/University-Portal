@@ -70,7 +70,7 @@
                             <div class="comment-header">
                                 <div class="comment-author-date">
                                     <span class="comment-author">@comment.UserName</span>
-                                    <span class="comment-date">@comment.CommentDate.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</span>
+                                    <span class="comment-date">@TimeZoneInfo.ConvertTimeFromUtc(comment.CommentDate, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")).ToString("MMM dd, yyyy HH:mm")
                                 </div>
 
                                 @if (User.IsInRole("Admin"))

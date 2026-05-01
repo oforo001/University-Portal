@@ -25,7 +25,10 @@
                 <span asp-validation-for="Token" class="text-danger"></span>
             </div>
 
-            <input type="submit" value="Zweryfikuj" class="btn btn-success w-100" />
+            <button type="submit" class="btn btn-success w-100" id="verifyBtn">
+                <span id="verifyText">Zweryfikuj</span>
+                <span id="verifySpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+            </button>
 
             <div class="text-center mt-2">
                 <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Powrót</a>
@@ -74,29 +77,42 @@
 
             $("#verifyEmailForm").submit(function (e) {
                 e.preventDefault();
+
                 const form = $(this);
-                const btn = form.find("input[type=submit]");
+                const btn = $("#verifyBtn");
+                const spinner = $("#verifySpinner");
+                const text = $("#verifyText");
+
                 btn.prop("disabled", true);
+                spinner.removeClass("d-none");
+                text.text("Weryfikacja...");
 
                 $.ajax({
                     type: "POST",
                     url: form.attr("action"),
                     data: form.serialize(),
+
                     success: function (res) {
                         if (res.success) {
                             showToast(true, res.message);
+
                             setTimeout(() => {
                                 window.location.href = res.redirectUrl;
                             }, 1500);
-                        } else if (res.errors) {
+                        }
+                        else if (res.errors) {
                             showToast(false, res.errors.join("<br>"));
                         }
                     },
+
                     error: function () {
                         showToast(false, "Wystąpił nieoczekiwany błąd.");
                     },
+
                     complete: function () {
                         btn.prop("disabled", false);
+                        spinner.addClass("d-none");
+                        text.text("Zweryfikuj");
                     }
                 });
             });

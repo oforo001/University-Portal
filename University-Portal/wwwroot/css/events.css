@@ -5,3 +5,111 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.05);
     margin-top: 50px;
 }
+.event-card .card {
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+    .event-card .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    }
+
+.event-desc {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    transition: all .2s ease;
+}
+
+    .event-desc.expanded {
+        -webkit-line-clamp: unset;
+        display: block;
+    }
+
+.desc-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    user-select: none;
+}
+
+.arrow-icon {
+    width: 22px;
+    height: 22px;
+    stroke: #9aa0a6;
+    fill: transparent;
+    stroke-width: 2.0;
+    transition: transform .25s ease, stroke .2s ease;
+}
+
+.desc-toggle:hover .arrow-icon {
+    stroke: #6f757d;
+}
+
+.desc-toggle.active .arrow-icon {
+    transform: rotate(180deg);
+}
+
+.action-bar {
+    background: #f8f9fa;
+}
+
+.btn-action {
+    border-radius: 10px;
+    padding: 6px 14px;
+    transition: .2s;
+}
+
+.btn-view {
+    background: #0d6efd;
+    color: white;
+}
+
+.btn-delete {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    background: transparent;
+}
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+.event-desc {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    transition: all .2s ease;
+}
+
+    .event-desc.expanded {
+        -webkit-line-clamp: unset;
+        display: block;
+    }
+
+.desc-toggle {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.arrow-icon {
+    width: 22px;
+    height: 22px;
+    stroke: #9aa0a6;
+    fill: none; 
+    stroke-width: 2;
+    transition: transform .25s ease, stroke .2s ease;
+}
+
+.desc-toggle:hover .arrow-icon {
+    stroke: #6f757d;
+}
+
+.desc-toggle.active .arrow-icon {
+    transform: rotate(180deg);
+}

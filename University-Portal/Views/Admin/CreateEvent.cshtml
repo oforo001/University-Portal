@@ -25,9 +25,6 @@
               method="post"
               enctype="multipart/form-data">
 
-            <div class="validation-summary">
-                <div asp-validation-summary="All" class="text-danger"></div>
-            </div>
 
             <div class="form-group">
                 <label asp-for="Title" class="form-label"></label>
@@ -155,7 +152,6 @@
                         if (xhr.responseJSON?.message) {
                             showToast(false, xhr.responseJSON.message);
                         } else {
-                            // fallback: pokaż wszystkie błędy walidacji
                             const errors = [];
                             form.find("span.text-danger").each(function () {
                                 const text = $(this).text().trim();

@@ -3,12 +3,10 @@
 *.user
 *.suo
 appsettings.json
+Properties/PublishProfiles/
+ServiceDependencies
 
 # Build output
 bin/
 obj/
 
-# SQLite database files
-*.db
-*.db-shm
-*.db-wal

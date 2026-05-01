@@ -1,18 +1,77 @@
-﻿using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
-using MimeKit.Text;
-using University_Portal.Models;
+﻿using University_Portal.Models;
+using Azure.Communication.Email;
+using Azure;
 
 namespace University_Portal.AppServices.E_mail
 {
     public class EmailService : IEmailService
     {
-        public IConfiguration _config { get; }
+        private readonly IConfiguration _config;
+        private readonly EmailClient _emailClient;
+        private readonly string _sender;
+
         public EmailService(IConfiguration config)
         {
-            _config=config;
+            _config = config;
+
+            var connectionString = _config["AzureEmail:ConnectionString"];
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new Exception("Azure Email connection string missing");
+
+            _emailClient = new EmailClient(connectionString);
+
+            _sender = _config["AzureEmail:SenderAddress"];
+
+            if (string.IsNullOrWhiteSpace(_sender))
+                throw new Exception("Azure Email sender address missing");
         }
+
+        // =========================
+        // CORE SEND METHOD (AZURE)
+        // =========================
+        public async Task SendEmailAsync(EmailDto request)
+        {
+            var message = new EmailMessage(
+                senderAddress: _sender,
+                content: new EmailContent(request.Subject)
+                {
+                    Html = request.Body,
+                    PlainText = "Please view this email in HTML format."
+                },
+                recipients: new EmailRecipients(new List<EmailAddress>
+                {
+                    new EmailAddress(request.To)
+                })
+            );
+
+            try
+            {
+                var operation = await _emailClient.SendAsync(
+                    WaitUntil.Completed,
+                    message
+                );
+
+                var result = operation.Value;
+
+                Console.WriteLine($"Status: {result.Status}");
+
+                if (result.Status != EmailSendStatus.Succeeded)
+                {
+                    throw new Exception($"Email sending failed: {result.Status}");
+                }
+            }
+            catch (RequestFailedException ex)
+            {
+                Console.WriteLine("=== AZURE EMAIL ERROR ===");
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        // =========================
+        // VERIFICATION EMAIL
+        // =========================
         public async Task SendEmailVerificationAsync(string toEmail, string token)
         {
             string subject = "Twój kod weryfikacyjny";
@@ -55,6 +114,10 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
+
+        // =========================
+        // WELCOME EMAIL
+        // =========================
         public async Task SendWelcomeEmailAsync(string toEmail, string fullName, string password, string role)
         {
             string subject = "Witamy w University Portal!";
@@ -98,24 +161,10 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
-        public async Task SendEmailAsync(EmailDto request)
-        {
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_config.GetSection("EmailUsername").Value));
-            email.To.Add(MailboxAddress.Parse(request.To));
-            email.Subject = request.Subject;
-            email.Body = new TextPart(TextFormat.Html) { Text = request.Body };
 
-            using var smtp = new SmtpClient();
-
-            await smtp.ConnectAsync(_config.GetSection("EmailHost").Value, int.Parse(_config.GetSection("Port").Value), SecureSocketOptions.SslOnConnect);
-
-            await smtp.AuthenticateAsync(_config.GetSection("EmailUsername").Value, _config.GetSection("EmailPassword").Value);
-
-            await smtp.SendAsync(email);
-
-            await smtp.DisconnectAsync(true);
-        }
+        // =========================
+        // PASSWORD RESET EMAIL
+        // =========================
         public async Task SendPasswordResetEmailAsync(string toEmail, string token)
         {
             string subject = "Reset hasła";
@@ -137,6 +186,5 @@ namespace University_Portal.AppServices.E_mail
                 Body = body
             });
         }
-        
     }
 }

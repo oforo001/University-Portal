@@ -17,7 +17,7 @@ namespace University_Portal.Controllers
         private readonly IAccountActionStrategy<ChangePasswordViewModel> changePasswordStrategy;
         private readonly IAccountActionStrategy<string> sendResetTokenStrategy;
 
-        public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IEmailService emailService,IVerificationTokenService verificationTokenService, IAccountActionStrategy<ChangePasswordViewModel> changePasswordStrategy, IAccountActionStrategy<string> sendResetTokenStrategy)
+        public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IEmailService emailService, IVerificationTokenService verificationTokenService, IAccountActionStrategy<ChangePasswordViewModel> changePasswordStrategy, IAccountActionStrategy<string> sendResetTokenStrategy)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
@@ -381,7 +381,6 @@ namespace University_Portal.Controllers
         {
             await signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
-
         }
     }
 }

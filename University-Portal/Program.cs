@@ -4,11 +4,21 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using University_Portal.Helpers;
 using University_Portal.AppServices.Account;
+using Microsoft.AspNetCore.Hosting.Server;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddConsole();
+
 builder.Services.AddDbContext<ApplicationContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+    builder.Configuration.GetConnectionString("DefaultConnection"),
+    sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure();
+    }));
+
 builder.Services.AddScoped<University_Portal.AppServices.E_mail.EmailService>();
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
@@ -34,6 +44,12 @@ builder.Services.AddScoped<IAccountActionStrategy<ChangePasswordViewModel>, Chan
 builder.Services.AddScoped<IAccountActionStrategy<string>, SendPasswordResetTokenStrategy>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+    db.Database.Migrate();
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -76,3 +92,4 @@ app.Use(async (context, next) =>
     
 
 app.Run();
+
