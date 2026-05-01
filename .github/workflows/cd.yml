@@ -28,11 +28,7 @@ jobs:
         run: dotnet test ./University-Portal.Tests/University-Portal.Tests.csproj -c Release --no-build
 
       - name: Publish (Linux runtime)
-        run: dotnet publish ./University-Portal/University-Portal.csproj \
-             -c Release \
-             -r linux-x64 \
-             --self-contained false \
-             -o publish
+        run: dotnet publish ./University-Portal/University-Portal.csproj -c Release -r linux-x64 --self-contained false -o publish
 
       - name: Inspect publish output
         run: |
