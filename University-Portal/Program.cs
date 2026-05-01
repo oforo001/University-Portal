@@ -11,13 +11,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.AddConsole();
 
+
 builder.Services.AddDbContext<ApplicationContext>(options =>
     options.UseSqlServer(
-    builder.Configuration.GetConnectionString("DefaultConnection"),
-    sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure();
-    }));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure();
+        }));
 
 builder.Services.AddScoped<University_Portal.AppServices.E_mail.EmailService>();
 
@@ -37,8 +38,11 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddScoped<University_Portal.AppServices.E_mail.IEmailService, University_Portal.AppServices.E_mail.EmailService>();
-builder.Services.AddScoped<University_Portal.AppServices.E_mail.IVerificationTokenService, University_Portal.AppServices.E_mail.VerificationTokenService>();
+builder.Services.AddScoped<University_Portal.AppServices.E_mail.IEmailService,
+    University_Portal.AppServices.E_mail.EmailService>();
+
+builder.Services.AddScoped<University_Portal.AppServices.E_mail.IVerificationTokenService,
+    University_Portal.AppServices.E_mail.VerificationTokenService>();
 
 builder.Services.AddScoped<IAccountActionStrategy<ChangePasswordViewModel>, ChangePasswordStrategy>();
 builder.Services.AddScoped<IAccountActionStrategy<string>, SendPasswordResetTokenStrategy>();
@@ -62,6 +66,22 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path;
+
+    if (AdminSetupState.IsInitialSetUpRequered &&
+        !path.StartsWithSegments("/Account/AccountSetup") &&
+        !path.StartsWithSegments("/css") &&
+        !path.StartsWithSegments("/js") &&
+        !path.StartsWithSegments("/lib"))
+    {
+        context.Response.Redirect("/Account/AccountSetup");
+        return;
+    }
+
+    await next();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -75,21 +95,11 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    DBUserRolesInit.SeedDefaultAdminAsync(userManager, roleManager).GetAwaiter().GetResult();
+
+    DBUserRolesInit
+        .SeedDefaultAdminAsync(userManager, roleManager)
+        .GetAwaiter()
+        .GetResult();
 }
 
-app.Use(async (context, next) =>
-{
-    if (AdminSetupState.IsInitialSetUpRequered && !context.Request.Path.StartsWithSegments("/Account/AccountSetup"))
-    {
-        context.Response.Redirect("/Account/AccountSetup");
-        return;
-    }
-    await next();
-});
-    
-
-    
-
 app.Run();
-
