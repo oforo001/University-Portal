@@ -1,12 +1,15 @@
-name: CI Build and Test
+name: CI/CD Build, Test and Deploy
 
 on:
   pull_request:
     branches:
       - main
+    types:
+      - closed
 
 jobs:
-  build-test:
+  build-test-deploy:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -25,4 +28,14 @@ jobs:
         run: dotnet build ./University-Portal/University-Portal.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test ./University-Portal.Tests/University-Portal.Tests.csproj -c Release
+        run: dotnet test ./University-Portal.Tests/University-Portal.Tests.csproj -c Release --no-build
+
+      - name: Publish
+        run: dotnet publish ./University-Portal/University-Portal.csproj -c Release -o publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: university-portal
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: publish
