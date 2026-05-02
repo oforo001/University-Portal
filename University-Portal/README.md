@@ -30,6 +30,6 @@ Zarządzanie użytkownikami:  blokowanie kont.
 
 Zarządzanie wydarzeniami i wpisami.
 
-Usuwanie lub edycja niewłaściwych treści (wpisy...)
+Usuwanie lub edycja niewłaściwych treści
 
 
