@@ -115,11 +115,6 @@
     transition: filter 0.25s ease;
 }
 
-
-.card {
-    min-height: 320px;
-}
-
 .table tbody {
     min-height: 220px;
 }

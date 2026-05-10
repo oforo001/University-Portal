@@ -1,23 +1,81 @@
+/* ===================================== */
+/* ROOT                                  */
+/* ===================================== */
+
 html {
-  font-size: 14px;
-  background-color: lightsteelblue;
+    font-size: 14px;
+    min-height: 100%;
+    background-color: #f9fafb;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
+/* ===================================== */
+/* GLOBAL BODY                           */
+/* ===================================== */
 
 body {
-  margin-bottom: 60px;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f9fafb;
+    color: #212529;
 }
+
+/* ===================================== */
+/* FOCUS STATES                          */
+/* ===================================== */
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/* ===================================== */
+/* MAIN CONTENT                          */
+/* ===================================== */
+
+main {
+    width: 100%;
+}
+
+/* ===================================== */
+/* CONTENT WRAPPER                       */
+/* ===================================== */
+
+.content-wrapper {
+    min-height: 100vh;
+    padding-bottom: 2rem;
+    overflow-x: hidden;
+}
+
+/* ===================================== */
+/* FOOTER                                */
+/* ===================================== */
+
+.footer {
+    width: 100%;
+    padding: 1rem 0;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    position: static;
+    border-top: 1px solid #dee2e6;
+}
+
+/* ===================================== */
+/* LINKS                                 */
+/* ===================================== */
+
+a {
+    text-decoration: none;
+}
+
+    a:hover {
+        text-decoration: none;
+    }
