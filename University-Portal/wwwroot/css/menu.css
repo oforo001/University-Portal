@@ -1,8 +1,22 @@
-﻿body {
+﻿html,
+body {
+    min-height: 100%;
+    margin: 0;
+    background-color: #f9fafb;
+}
+
+/* ========================= */
+/* APP LAYOUT                */
+/* ========================= */
+
+.layout-shell {
     display: flex;
     min-height: 100vh;
-    margin: 0;
 }
+
+/* ========================= */
+/* SIDEBAR                   */
+/* ========================= */
 
 .side-menu {
     width: 250px;
@@ -14,7 +28,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    height: 100%;
+    height: 100vh;
     overflow-y: auto;
     z-index: 1000;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
@@ -48,6 +62,10 @@
                 margin-right: 0.5rem;
             }
 
+/* ========================= */
+/* LOGIN SECTION             */
+/* ========================= */
+
 .login-section {
     margin-top: auto;
 }
@@ -62,14 +80,23 @@
         cursor: pointer;
     }
 
+/* ========================= */
+/* MAIN CONTENT              */
+/* ========================= */
 
 .content-wrapper {
     margin-left: 250px;
     padding: 2rem;
     flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: visible;
     background-color: #f9fafb;
 }
 
+/* ========================= */
+/* FOOTER                    */
+/* ========================= */
 
 footer {
     width: 100%;
@@ -77,11 +104,15 @@ footer {
     background-color: #f8f9fa;
 }
 
+/* ========================= */
+/* MOBILE                    */
+/* ========================= */
 
 @media (max-width: 991px) {
 
-    body {
+    .layout-shell {
         display: block;
+        min-height: auto;
     }
 
     .side-menu {
@@ -93,6 +124,10 @@ footer {
         padding: 1rem;
     }
 }
+
+/* ========================= */
+/* OFFCANVAS                 */
+/* ========================= */
 
 .offcanvas {
     background-color: #1f2937;
@@ -126,13 +161,11 @@ footer {
                 margin-right: 0.5rem;
             }
 
-
 .offcanvas-header {
     background-color: #1f2937;
     color: white;
     border-bottom: 1px solid #374151;
 }
-
 
 .offcanvas .btn-close {
     filter: invert(1);
