@@ -1,70 +1,19 @@
-﻿
-/* ===================================== */
-/* EMPTY STATE                           */
-/* ===================================== */
-
-.no-events {
+﻿.no-events {
     min-height: 300px;
     background-color: #f8f9fa;
     border-radius: 1rem;
     box-shadow: 0 0 15px rgba(0,0,0,0.05);
     margin-top: 50px;
-    opacity: .85;
 }
 
-/* ===================================== */
-/* EVENT CARD                            */
-/* ===================================== */
-
-.event-card {
-    display: flex;
+.event-card .card {
+    transition: transform .2s ease, box-shadow .2s ease;
 }
 
-    .event-card .card {
-        width: 100%;
-        border-radius: 16px;
-        overflow: hidden;
-        background: #fff;
-        display: flex;
-        flex-direction: column;
-        transition: transform .25s ease, box-shadow .25s ease;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    .event-card .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.12);
     }
-
-        .event-card .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 36px rgba(0,0,0,0.16);
-        }
-
-    /* ===================================== */
-    /* IMAGE                                 */
-    /* ===================================== */
-
-    .event-image,
-    .event-card .card-img-top {
-        height: 240px;
-        object-fit: cover;
-        transition: transform .4s ease;
-    }
-
-    .event-card .card:hover .card-img-top {
-        transform: scale(1.03);
-    }
-
-    /* ===================================== */
-    /* CARD BODY                             */
-    /* ===================================== */
-
-    .event-card .card-body {
-        padding: 1.25rem;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-/* ===================================== */
-/* DESCRIPTION                           */
-/* ===================================== */
 
 .event-desc {
     overflow: hidden;
@@ -72,7 +21,6 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     transition: all .2s ease;
-    word-break: break-word;
 }
 
     .event-desc.expanded {
@@ -80,16 +28,75 @@
         display: block;
     }
 
-/* ===================================== */
-/* TOGGLE ARROW                          */
-/* ===================================== */
+.desc-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    user-select: none;
+}
+
+.arrow-icon {
+    width: 22px;
+    height: 22px;
+    stroke: #9aa0a6;
+    fill: transparent;
+    stroke-width: 2.0;
+    transition: transform .25s ease, stroke .2s ease;
+}
+
+.desc-toggle:hover .arrow-icon {
+    stroke: #6f757d;
+}
+
+.desc-toggle.active .arrow-icon {
+    transform: rotate(180deg);
+}
+
+.action-bar {
+    background: #f8f9fa;
+}
+
+.btn-action {
+    border-radius: 10px;
+    padding: 6px 14px;
+    transition: .2s;
+}
+
+.btn-view {
+    background: #0d6efd;
+    color: white;
+}
+
+.btn-delete {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    background: transparent;
+}
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+.event-desc {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    transition: all .2s ease;
+}
+
+    .event-desc.expanded {
+        -webkit-line-clamp: unset;
+        display: block;
+    }
 
 .desc-toggle {
     display: flex;
     justify-content: center;
     margin-top: 10px;
     cursor: pointer;
-    user-select: none;
 }
 
 .arrow-icon {
@@ -107,162 +114,4 @@
 
 .desc-toggle.active .arrow-icon {
     transform: rotate(180deg);
-}
-
-/* ===================================== */
-/* ACTION BAR                            */
-/* ===================================== */
-
-.action-bar {
-    background: linear-gradient(to right, #f8f9fa, #ffffff);
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: flex-end;
-    gap: .5rem;
-    flex-wrap: wrap;
-}
-
-/* ===================================== */
-/* BUTTONS                               */
-/* ===================================== */
-
-.btn-action {
-    border-radius: 10px;
-    padding: 8px 16px;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all .2s ease;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-.btn-view {
-    background: #0d6efd;
-    color: white;
-    border: none;
-}
-
-    .btn-view:hover {
-        background: #0b5ed7;
-        transform: scale(1.04);
-        box-shadow: 0 6px 14px rgba(13,110,253,0.25);
-    }
-
-.btn-delete {
-    border: 1px solid #dc3545;
-    color: #dc3545;
-    background: transparent;
-}
-
-    .btn-delete:hover {
-        background: #dc3545;
-        color: white;
-        transform: scale(1.04);
-        box-shadow: 0 6px 14px rgba(220,53,69,0.25);
-    }
-
-/* ===================================== */
-/* RESPONSIVE                            */
-/* ===================================== */
-
-/* Large laptops */
-@media (max-width: 1400px) {
-
-    .event-image,
-    .event-card .card-img-top {
-        height: 190px;
-    }
-
-    .event-card .card-body {
-        padding: 1rem;
-    }
-
-    .event-desc {
-        -webkit-line-clamp: 2;
-    }
-
-    .btn-action {
-        padding: 6px 12px;
-        font-size: .9rem;
-    }
-}
-
-/* Small laptops */
-@media (max-width: 1200px) {
-
-    .event-image,
-    .event-card .card-img-top {
-        height: 170px;
-    }
-
-    .action-bar {
-        padding: .75rem 1rem;
-    }
-}
-
-/* ===================================== */
-/* MOBILE FIX (CRITICAL)                */
-/* ===================================== */
-
-@media (max-width: 768px) {
-
-    .event-image,
-    .event-card .card-img-top {
-        height: 140px;
-    }
-
-    .event-card .card-body {
-        padding: 0.9rem;
-    }
-
-    .event-desc {
-        -webkit-line-clamp: 2;
-        font-size: 0.95rem;
-    }
-
-    .action-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: .5rem;
-        padding: .75rem;
-    }
-
-    .btn-action {
-        width: 100%;
-        padding: 10px;
-        font-size: 0.95rem;
-    }
-
-    .row {
-        padding-bottom: 2rem;
-    }
-}
-
-/* ===================================== */
-/* LAYOUT FIX (FINAL STABLE VERSION)    */
-/* ===================================== */
-
-html, body {
-    height: 100%;
-}
-
-body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* IMPORTANT: DO NOT use flex here */
-#pageWrapper {
-    flex: 1;
-    padding-bottom: 2rem;
-}
-
-/* FOOTER ALWAYS BELOW CONTENT */
-footer {
-    margin-top: auto;
-    width: 100%;
-    position: relative;
-    z-index: 10;
 }
