@@ -37,13 +37,12 @@
             @foreach (var ev in Model)
             {
                 <div class="col event-card" data-event-id="@ev.Id">
-                    <div class="card h-100 shadow-sm">
+                    <div class="card shadow-sm">
 
                         @if (!string.IsNullOrEmpty(ev.ImagePath))
                         {
                             <img src="~/@ev.ImagePath"
-                                 class="card-img-top"
-                                 style="height:300px; object-fit:cover;" />
+                                 class="card-img-top event-image" />
                         }
                         else
                         {
